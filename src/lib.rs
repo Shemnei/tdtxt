@@ -16,6 +16,29 @@
 //! assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
 //! assert_eq!(task.description().custom().collect::<Vec<_>>(), vec![("due", "2016-05-30")]);
 //! ```
+//!
+//! ```rust
+//! use std::str::FromStr as _;
+//!
+//! use tdtxt::{Task, Date, State, Priority, DateCompound};
+//!
+//! let line = "x (A) 2016-05-20 2016-04-30 measure space for +chapelShelving @chapel due:2016-05-30";
+//! let task = Task::build()
+//!     .state(State::Done)
+//!     .priority(Priority::A)
+//!     .date_compound(DateCompound::completed(Date::ymd(2016, 4, 30), Date::ymd(2016, 5, 20)))
+//!     .build("measure space for +chapelShelving @chapel due:2016-05-30");
+//!
+//! assert_eq!(format!("{}", task), line);
+//!
+//! assert_eq!(task.state(), &State::Done);
+//! assert_eq!(task.priority(), Some(&Priority::A));
+//! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
+//! assert_eq!(task.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
+//! assert_eq!(task.description().projects().collect::<Vec<_>>(), vec!["chapelShelving"]);
+//! assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
+//! assert_eq!(task.description().custom().collect::<Vec<_>>(), vec![("due", "2016-05-30")]);
+//! ```
 
 #![allow(dead_code, rustdoc::private_intra_doc_links)]
 #![deny(
