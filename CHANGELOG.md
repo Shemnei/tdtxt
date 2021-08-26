@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `Range<usize>` with the struct `ByteSpan`
 - Renamed `Todo` to `Task`
 - Field `Task::state` is now `State` instead of `Option<State>`
+- Renamed `XXXParseError` to `ParseXXXError` to follow the convention of the std lib
 
 ## [0.1.0] - 2021-08-26
 
