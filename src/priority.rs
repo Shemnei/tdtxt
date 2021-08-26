@@ -4,35 +4,81 @@ use std::fmt;
 
 use crate::parse::{Parse, Parser};
 
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum Priority {
-	A = 0,
-	B,
-	C,
-	D,
-	E,
-	F,
-	G,
-	H,
-	I,
-	J,
-	K,
-	L,
-	M,
-	N,
-	O,
-	P,
-	Q,
-	R,
-	S,
-	T,
-	U,
-	V,
-	W,
-	X,
-	Y,
-	Z,
+macro_rules! priorities {
+	(
+		$(
+			$( #[doc = $doc:literal] )*
+			$name:ident : $char:literal $( = $idx:literal )? ,
+		)+
+	) => {
+		#[repr(u8)]
+		#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+		pub enum Priority {
+			$(
+				$( #[doc = $doc] )*
+				$name $( = $idx )? ,
+			)+
+		}
+
+		impl ::std::fmt::Display for Priority {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+				match self {
+					$( Self::$name => f.write_str(concat!("(", stringify!($name) ,")")) , )+
+				}
+			}
+		}
+
+		#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+		pub struct InvalidPriorityError;
+
+		impl ::std::fmt::Display for InvalidPriorityError {
+			fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+				f.write_str("invalid priority")
+			}
+		}
+
+		impl ::std::error::Error for InvalidPriorityError {}
+
+		impl ::std::convert::TryFrom<char> for Priority {
+			type Error = InvalidPriorityError;
+
+			fn try_from(value: char) -> ::std::result::Result<Self, Self::Error> {
+				match value {
+					$( $char => Ok(Self::$name) , )+
+					_ => Err(InvalidPriorityError),
+				}
+			}
+		}
+	};
+}
+
+priorities! {
+	A : 'A' = 0,
+	B : 'B',
+	C : 'C',
+	D : 'D',
+	E : 'E',
+	F : 'F',
+	G : 'G',
+	H : 'H',
+	I : 'I',
+	J : 'J',
+	K : 'K',
+	L : 'L',
+	M : 'M',
+	N : 'N',
+	O : 'O',
+	P : 'P',
+	Q : 'Q',
+	R : 'R',
+	S : 'S',
+	T : 'T',
+	U : 'U',
+	V : 'V',
+	W : 'W',
+	X : 'X',
+	Y : 'Y',
+	Z : 'Z',
 }
 
 impl PartialOrd<Self> for Priority {
@@ -43,122 +89,31 @@ impl PartialOrd<Self> for Priority {
 
 impl Ord for Priority {
 	fn cmp(&self, other: &Self) -> Ordering {
-		match std::cmp::Ord::cmp(&(*self as u8), &(*other as u8)) {
-			Ordering::Less => Ordering::Greater,
-			Ordering::Greater => Ordering::Less,
-			Ordering::Equal => Ordering::Equal,
-		}
-	}
-}
-
-impl fmt::Display for Priority {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		match self {
-			Self::A => f.write_str("(A)"),
-			Self::B => f.write_str("(B)"),
-			Self::C => f.write_str("(C)"),
-			Self::D => f.write_str("(D)"),
-			Self::E => f.write_str("(E)"),
-			Self::F => f.write_str("(F)"),
-			Self::G => f.write_str("(G)"),
-			Self::H => f.write_str("(H)"),
-			Self::I => f.write_str("(I)"),
-			Self::J => f.write_str("(J)"),
-			Self::K => f.write_str("(K)"),
-			Self::L => f.write_str("(L)"),
-			Self::M => f.write_str("(M)"),
-			Self::N => f.write_str("(N)"),
-			Self::O => f.write_str("(O)"),
-			Self::P => f.write_str("(P)"),
-			Self::Q => f.write_str("(Q)"),
-			Self::R => f.write_str("(R)"),
-			Self::S => f.write_str("(S)"),
-			Self::T => f.write_str("(T)"),
-			Self::U => f.write_str("(U)"),
-			Self::V => f.write_str("(V)"),
-			Self::W => f.write_str("(W)"),
-			Self::X => f.write_str("(X)"),
-			Self::Y => f.write_str("(Y)"),
-			Self::Z => f.write_str("(Z)"),
-		}
+		// Switched (other with self) so that `0` is the highest priority
+		std::cmp::Ord::cmp(&(*other as u8), &(*self as u8))
 	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct InvalidPriorityError;
+pub struct ParsePriorityError;
 
-impl fmt::Display for InvalidPriorityError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("invalid priority")
-	}
-}
-
-impl std::error::Error for InvalidPriorityError {}
-
-impl TryFrom<char> for Priority {
-	type Error = InvalidPriorityError;
-
-	fn try_from(value: char) -> Result<Self, Self::Error> {
-		match value {
-			'A' => Ok(Self::A),
-			'B' => Ok(Self::B),
-			'C' => Ok(Self::C),
-			'D' => Ok(Self::D),
-			'E' => Ok(Self::E),
-			'F' => Ok(Self::F),
-			'G' => Ok(Self::G),
-			'H' => Ok(Self::H),
-			'I' => Ok(Self::I),
-			'J' => Ok(Self::J),
-			'K' => Ok(Self::K),
-			'L' => Ok(Self::L),
-			'M' => Ok(Self::M),
-			'N' => Ok(Self::N),
-			'O' => Ok(Self::O),
-			'P' => Ok(Self::P),
-			'Q' => Ok(Self::Q),
-			'R' => Ok(Self::R),
-			'S' => Ok(Self::S),
-			'T' => Ok(Self::T),
-			'U' => Ok(Self::U),
-			'V' => Ok(Self::V),
-			'W' => Ok(Self::W),
-			'X' => Ok(Self::X),
-			'Y' => Ok(Self::Y),
-			'Z' => Ok(Self::Z),
-			_ => Err(InvalidPriorityError),
-		}
-	}
-}
-
-impl TryFrom<u8> for Priority {
-	type Error = InvalidPriorityError;
-
-	fn try_from(value: u8) -> Result<Self, Self::Error> {
-		Self::try_from(value as char)
-	}
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct PriorityParseError;
-
-impl fmt::Display for PriorityParseError {
+impl fmt::Display for ParsePriorityError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("failed to parse priority")
 	}
 }
 
-impl std::error::Error for PriorityParseError {}
+impl std::error::Error for ParsePriorityError {}
 
 impl Parse for Priority {
-	type Error = PriorityParseError;
+	type Error = ParsePriorityError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let _ = parser.expect_u8(b'(').ok_or(PriorityParseError)?;
-		let priority = parser.parse_alpha_upper().ok_or(PriorityParseError)?;
+		let _ = parser.expect_u8(b'(').ok_or(ParsePriorityError)?;
+		let priority = parser.parse_alpha_upper().ok_or(ParsePriorityError)?;
 		let priority =
-			Self::try_from(priority).map_err(|_| PriorityParseError)?;
-		let _ = parser.expect_slice(b") ").ok_or(PriorityParseError)?;
+			Self::try_from(priority).map_err(|_| ParsePriorityError)?;
+		let _ = parser.expect_slice(b") ").ok_or(ParsePriorityError)?;
 		Ok(priority)
 	}
 }
