@@ -425,6 +425,32 @@ Post signs around the neighborhood +GarageSale
 		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+
+		let input = b"x  How:you doin (A)";
+		let mut parser = Parser::new(input);
+
+		let task_should =
+			Task::build().state(State::Done).build(" How:you doin (A)");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
+		let projects_should: Vec<&str> = vec![];
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
+		let contexts_should: Vec<&str> = vec![];
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
+		let custom_should: Vec<(&str, &str)> = vec![("How", "you")];
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
+
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	// http://todotxt.org/todo.txt
