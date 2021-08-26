@@ -97,19 +97,16 @@ impl Description {
 		&self.raw
 	}
 
-	pub fn projects(&self) -> Vec<&str> {
-		self.projects.iter().map(|p| &self.raw[p.name.clone()]).collect()
+	pub fn projects(&self) -> ProjectIter<'_> {
+		ProjectIter::new(self)
 	}
 
-	pub fn contexts(&self) -> Vec<&str> {
-		self.contexts.iter().map(|c| &self.raw[c.name.clone()]).collect()
+	pub fn contexts(&self) -> ContextIter<'_> {
+		ContextIter::new(self)
 	}
 
-	pub fn custom(&self) -> Vec<(&str, &str)> {
-		self.custom
-			.iter()
-			.map(|c| (&self.raw[c.key.clone()], &self.raw[c.value.clone()]))
-			.collect()
+	pub fn custom(&self) -> CustomIter<'_> {
+		CustomIter::new(self)
 	}
 
 	// project: \+[^ ]+
@@ -224,5 +221,73 @@ impl Parse for Description {
 		let _ = parser.parse_u8();
 
 		Ok(description)
+	}
+}
+
+macro_rules! simple_iter {
+	( $name:ident => $range:ty, $rangevar:ident) => {
+		#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+		pub struct $name<'a> {
+			description: &'a str,
+			ranges: &'a [$range],
+			ranges_idx: usize,
+		}
+
+		impl<'a> $name<'a> {
+			fn new(description: &'a Description) -> Self {
+				Self {
+					description: &description.raw,
+					ranges: &description.$rangevar,
+					ranges_idx: 0,
+				}
+			}
+		}
+
+		impl<'a> Iterator for $name<'a> {
+			type Item = &'a str;
+
+			fn next(&mut self) -> Option<Self::Item> {
+				let range = self.ranges.get(self.ranges_idx)?;
+				self.ranges_idx += 1;
+
+				// TODO: rm clone
+				Some(&self.description[range.name.clone()])
+			}
+		}
+	};
+}
+
+simple_iter!(ProjectIter => ProjectRange, projects);
+simple_iter!(ContextIter => ContextRange, contexts);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CustomIter<'a> {
+	description: &'a str,
+	ranges: &'a [CustomRange],
+	ranges_idx: usize,
+}
+
+impl<'a> CustomIter<'a> {
+	fn new(description: &'a Description) -> Self {
+		Self {
+			description: &description.raw,
+			ranges: &description.custom,
+			ranges_idx: 0,
+		}
+	}
+}
+
+impl<'a> Iterator for CustomIter<'a> {
+	type Item = (&'a str, &'a str);
+
+	fn next(&mut self) -> Option<Self::Item> {
+		let range = self.ranges.get(self.ranges_idx)?;
+		self.ranges_idx += 1;
+
+		// TODO: rm clone
+		Some((
+			&self.description[range.key.clone()],
+			&self.description[range.value.clone()],
+		))
 	}
 }

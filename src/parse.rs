@@ -1,3 +1,5 @@
+// TODO: make bytespans/pos
+
 pub trait Parse: Sized {
 	type Error: std::error::Error;
 

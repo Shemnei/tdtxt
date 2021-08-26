@@ -12,9 +12,9 @@
 //! assert_eq!(task.priority(), Some(&Priority::A));
 //! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
 //! assert_eq!(task.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
-//! assert_eq!(task.description().projects(), vec!["chapelShelving"]);
-//! assert_eq!(task.description().contexts(), vec!["chapel"]);
-//! assert_eq!(task.description().custom(), vec![("due", "2016-05-30")]);
+//! assert_eq!(task.description().projects().collect::<Vec<_>>(), vec!["chapelShelving"]);
+//! assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
+//! assert_eq!(task.description().custom().collect::<Vec<_>>(), vec![("due", "2016-05-30")]);
 //! ```
 
 #![allow(dead_code, rustdoc::private_intra_doc_links)]
@@ -260,11 +260,20 @@ Post signs around the neighborhood +GarageSale
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
 		let projects_should = vec!["Family", "PeaceLoveAndHappiness"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should = vec!["iphone", "phone"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 
@@ -277,11 +286,20 @@ Post signs around the neighborhood +GarageSale
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
 		let projects_should: Vec<&str> = Vec::new();
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = Vec::new();
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 
@@ -293,11 +311,20 @@ Post signs around the neighborhood +GarageSale
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
 		let projects_should: Vec<&str> = Vec::new();
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = Vec::new();
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
@@ -321,11 +348,20 @@ Post signs around the neighborhood +GarageSale
 		let task_is = task_is.unwrap();
 		assert_eq!(task_is.to_string().as_bytes(), input);
 		let projects_should: Vec<&str> = vec!["century_waiting"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["home"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![("author", "me")];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
@@ -341,11 +377,20 @@ Post signs around the neighborhood +GarageSale
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
 		let projects_should: Vec<&str> = Vec::new();
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["home", "work"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
@@ -374,11 +419,20 @@ x Download Todo.txt mobile app @Phone";
 			b"(A) Call Mom @Phone +Family"
 		);
 		let projects_should: Vec<&str> = vec!["Family"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["Phone"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should = Task::build()
 			.priority(Priority::A)
@@ -391,11 +445,20 @@ x Download Todo.txt mobile app @Phone";
 			b"(A) Schedule annual checkup +Health"
 		);
 		let projects_should: Vec<&str> = vec!["Health"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec![];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should = Task::build()
 			.priority(Priority::B)
@@ -408,11 +471,20 @@ x Download Todo.txt mobile app @Phone";
 			b"(B) Outline chapter 5 +Novel @Computer"
 		);
 		let projects_should: Vec<&str> = vec!["Novel"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["Computer"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should = Task::build()
 			.priority(Priority::C)
@@ -425,11 +497,20 @@ x Download Todo.txt mobile app @Phone";
 			b"(C) Add cover sheets @Office +TPSReports"
 		);
 		let projects_should: Vec<&str> = vec!["TPSReports"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["Office"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should =
 			Task::build().build("Plan backyard herb garden @Home");
@@ -441,11 +522,20 @@ x Download Todo.txt mobile app @Phone";
 			b"Plan backyard herb garden @Home"
 		);
 		let projects_should: Vec<&str> = vec![];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["Home"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should = Task::build().build("Pick up milk @GroceryStore");
 		let task_is = Task::parse(&mut parser);
@@ -456,11 +546,20 @@ x Download Todo.txt mobile app @Phone";
 			b"Pick up milk @GroceryStore"
 		);
 		let projects_should: Vec<&str> = vec![];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["GroceryStore"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should = Task::build()
 			.build("Research self-publishing services +Novel @Computer");
@@ -472,11 +571,20 @@ x Download Todo.txt mobile app @Phone";
 			b"Research self-publishing services +Novel @Computer"
 		);
 		let projects_should: Vec<&str> = vec!["Novel"];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["Computer"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		let task_should = Task::build()
 			.state(State::Done)
@@ -489,11 +597,20 @@ x Download Todo.txt mobile app @Phone";
 			b"x Download Todo.txt mobile app @Phone"
 		);
 		let projects_should: Vec<&str> = vec![];
-		assert_eq!(task_is.description.projects(), projects_should);
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
 		let contexts_should: Vec<&str> = vec!["Phone"];
-		assert_eq!(task_is.description.contexts(), contexts_should);
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(task_is.description.custom(), custom_should);
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
 
 		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
