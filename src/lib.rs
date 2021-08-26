@@ -1,3 +1,23 @@
+//! # Examples
+//!
+//! ```rust
+//! use std::str::FromStr as _;
+//!
+//! use tdtxt::todo::{Date, State, Priority, DateCompound};
+//!
+//! let line = "x (A) 2016-05-20 2016-04-30 measure space for +chapelShelving @chapel due:2016-05-30";
+//! let todo = tdtxt::todo::Todo::from_str(line).unwrap();
+//!
+//! assert_eq!(todo.state(), Some(&State::Done));
+//! assert_eq!(todo.priority(), Some(&Priority::A));
+//! assert_eq!(todo.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30),
+//! completed: Date::ymd(2016, 5, 20) }));
+//! assert_eq!(todo.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
+//! assert_eq!(todo.description().projects(), vec!["chapelShelving"]);
+//! assert_eq!(todo.description().contexts(), vec!["chapel"]);
+//! assert_eq!(todo.description().custom(), vec![("due", "2016-05-30")]);
+//! ```
+
 #![allow(dead_code, rustdoc::private_intra_doc_links)]
 #![deny(
     // Documentation
@@ -243,7 +263,7 @@ pub mod todo {
 	use std::cmp::Ordering;
 	use std::convert::TryFrom;
 	use std::fmt;
-	use std::ops::Range;
+	use std::ops::{Deref, Range};
 
 	use chrono::prelude::*;
 
@@ -713,6 +733,10 @@ pub mod todo {
 			Self { raw, projects, contexts, custom }
 		}
 
+		pub fn description(&self) -> &str {
+			&self.raw
+		}
+
 		pub fn projects(&self) -> Vec<&str> {
 			self.projects.iter().map(|p| &self.raw[p.name.clone()]).collect()
 		}
@@ -811,6 +835,14 @@ pub mod todo {
 		}
 	}
 
+	impl Deref for Description {
+		type Target = str;
+
+		fn deref(&self) -> &Self::Target {
+			&self.raw
+		}
+	}
+
 	#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 	pub struct DescriptionParseError;
 
@@ -851,6 +883,18 @@ pub mod todo {
 	impl Todo {
 		pub fn build() -> TodoBuilder {
 			Default::default()
+		}
+
+		pub const fn state(&self) -> Option<&State> {
+			self.state.as_ref()
+		}
+
+		pub const fn priority(&self) -> Option<&Priority> {
+			self.priority.as_ref()
+		}
+
+		pub const fn date_compound(&self) -> Option<&DateCompound> {
+			self.date_compound.as_ref()
 		}
 
 		pub const fn description(&self) -> &Description {
