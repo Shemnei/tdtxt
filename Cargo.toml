@@ -1,0 +1,13 @@
+[package]
+name = "tdtxt"
+version = "0.1.0"
+authors = ["Shemnei <Shemnei@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+chrono = { version = "0.4.19", features = ["serde"] }
+serde = { version = "1.0.117", features = ["derive"] }
+
+[features]
+
+# TODO: make serde/chrono a feature
