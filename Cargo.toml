@@ -9,7 +9,7 @@ homepage = "https://github.com/Shemnei/tdtxt"
 repository = "https://github.com/Shemnei/tdtxt"
 license= "Unlicense"
 exclude = ["/Makefile", "/.git/", "/.github/"]
-keywords = ["todotxt", "todo", "todo.txt", "parser"]
+keywords = ["todotxt", "todo", "todo-txt", "parser"]
 
 [dependencies]
 chrono = { version = "0.4.19", features = ["serde"] }
