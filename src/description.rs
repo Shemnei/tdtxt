@@ -230,24 +230,24 @@ impl Deref for Description {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DescriptionParseError;
+pub struct ParseDescriptionError;
 
-impl fmt::Display for DescriptionParseError {
+impl fmt::Display for ParseDescriptionError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("failed to parse description")
 	}
 }
 
-impl std::error::Error for DescriptionParseError {}
+impl std::error::Error for ParseDescriptionError {}
 
 impl Parse for Description {
-	type Error = DescriptionParseError;
+	type Error = ParseDescriptionError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
 		let description =
-			parser.parse_until(b'\n').ok_or(DescriptionParseError)?;
+			parser.parse_until(b'\n').ok_or(ParseDescriptionError)?;
 		let description = std::str::from_utf8(description)
-			.map_err(|_| DescriptionParseError)?;
+			.map_err(|_| ParseDescriptionError)?;
 		let description = Self::new(description);
 
 		// consume possible new line

@@ -105,7 +105,7 @@ mod tests {
 	use crate::parse::*;
 	use crate::priority::Priority;
 	use crate::state::State;
-	use crate::task::{Task, TaskParseError};
+	use crate::task::{ParseTaskError, Task};
 
 	#[test]
 	fn task_display() {
@@ -211,7 +211,7 @@ Post signs around the neighborhood +GarageSale
 		let task = Task::build().build("@GroceryStore Eskimo pies");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	#[test]
@@ -222,7 +222,7 @@ Post signs around the neighborhood +GarageSale
 		let task = Task::build().priority(Priority::A).build("Call Mom");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 
 		let input = b"Really gotta call Mom (A) @phone @someday
 (b) Get back to the boss
@@ -239,7 +239,7 @@ Post signs around the neighborhood +GarageSale
 		let task = Task::build().build("(B)->Submit TPS report");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	#[test]
@@ -263,7 +263,7 @@ Post signs around the neighborhood +GarageSale
 			.build("Call Mom");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 
 		let input = b"(A) Call Mom 2011-03-02";
 		let mut parser = Parser::new(input);
@@ -272,7 +272,7 @@ Post signs around the neighborhood +GarageSale
 			Task::build().priority(Priority::A).build("Call Mom 2011-03-02");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	#[test]
@@ -303,7 +303,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 
 		let input = b"Email SoAndSo at soandso@example.com";
 		let mut parser = Parser::new(input);
@@ -329,7 +329,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 
 		let input = b"Learn how to add 2+2";
 		let mut parser = Parser::new(input);
@@ -354,7 +354,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	#[test]
@@ -391,7 +391,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	#[test]
@@ -422,7 +422,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 
 		let input = b"2014-10 key:value";
 		let mut parser = Parser::new(input);
@@ -447,7 +447,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 
 		let input = b"x  How:you doin (A)";
 		let mut parser = Parser::new(input);
@@ -473,7 +473,7 @@ Post signs around the neighborhood +GarageSale
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	// http://todotxt.org/todo.txt
@@ -693,7 +693,7 @@ x Download Todo.txt mobile app @Phone";
 			custom_should
 		);
 
-		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+		assert_eq!(Task::parse(&mut parser), Err(ParseTaskError));
 	}
 
 	#[test]

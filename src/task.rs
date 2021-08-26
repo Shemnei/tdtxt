@@ -66,25 +66,25 @@ impl From<&str> for Description {
 
 // TODO: variants for description error, ...
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TaskParseError;
+pub struct ParseTaskError;
 
-impl fmt::Display for TaskParseError {
+impl fmt::Display for ParseTaskError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("failed to parse task")
 	}
 }
 
-impl std::error::Error for TaskParseError {}
+impl std::error::Error for ParseTaskError {}
 
 impl Parse for Task {
-	type Error = TaskParseError;
+	type Error = ParseTaskError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
 		let state = State::parse_opt(parser).unwrap_or_default();
 		let priority = Priority::parse_opt(parser);
 		let date_compound = DateCompound::parse_opt(parser);
 		let description =
-			Description::parse(parser).map_err(|_| TaskParseError)?;
+			Description::parse(parser).map_err(|_| ParseTaskError)?;
 
 		let task = Self { state, priority, date_compound, description };
 
@@ -93,7 +93,7 @@ impl Parse for Task {
 }
 
 impl std::str::FromStr for Task {
-	type Err = TaskParseError;
+	type Err = ParseTaskError;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let mut parser = Parser::new(s.as_bytes());

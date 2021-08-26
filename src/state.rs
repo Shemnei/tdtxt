@@ -24,24 +24,24 @@ impl fmt::Display for State {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StateParseError;
+pub struct ParseStateError;
 
-impl fmt::Display for StateParseError {
+impl fmt::Display for ParseStateError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("failed to parse state")
 	}
 }
 
-impl std::error::Error for StateParseError {}
+impl std::error::Error for ParseStateError {}
 
 impl Parse for State {
-	type Error = StateParseError;
+	type Error = ParseStateError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
 		if parser.expect_slice(b"x ").is_some() {
 			Ok(Self::Done)
 		} else {
-			Err(StateParseError)
+			Err(ParseStateError)
 		}
 	}
 }
