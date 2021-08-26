@@ -1,76 +1,89 @@
 use std::fmt;
-use std::ops::{Deref, Range};
+use std::ops::{Deref, Index};
 
 use crate::parse::{Cursor, Parse, Parser};
+use crate::span::ByteSpan;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ProjectRange {
-	full: Range<usize>,
-	name: Range<usize>,
+	full: ByteSpan,
+	name: ByteSpan,
 }
 
 impl ProjectRange {
-	pub const fn new(full: Range<usize>) -> Self {
-		let name = full.start + 1..full.end;
+	pub const fn new(full: ByteSpan) -> Self {
+		let name = full.offset_low(1);
 
 		Self { full, name }
 	}
 
-	pub const fn full(&self) -> &Range<usize> {
+	pub const fn full(&self) -> &ByteSpan {
 		&self.full
 	}
 
-	pub const fn project(&self) -> &Range<usize> {
+	pub const fn project(&self) -> &ByteSpan {
 		&self.name
+	}
+
+	pub fn index<'a, 'b>(&'a self, s: &'b str) -> &'b str {
+		Index::index(s, self.name)
 	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ContextRange {
-	full: Range<usize>,
-	name: Range<usize>,
+	full: ByteSpan,
+	name: ByteSpan,
 }
 
 impl ContextRange {
-	pub const fn new(full: Range<usize>) -> Self {
-		let name = full.start + 1..full.end;
+	pub const fn new(full: ByteSpan) -> Self {
+		let name = full.offset_low(1);
 
 		Self { full, name }
 	}
 
-	pub const fn full(&self) -> &Range<usize> {
+	pub const fn full(&self) -> &ByteSpan {
 		&self.full
 	}
 
-	pub const fn context(&self) -> &Range<usize> {
+	pub const fn context(&self) -> &ByteSpan {
 		&self.name
+	}
+
+	pub fn index<'a, 'b>(&'a self, s: &'b str) -> &'b str {
+		Index::index(s, self.name)
 	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CustomRange {
-	full: Range<usize>,
-	key: Range<usize>,
-	value: Range<usize>,
+	full: ByteSpan,
+	key: ByteSpan,
+	value: ByteSpan,
 }
 
 impl CustomRange {
-	pub const fn new(key: Range<usize>, value: Range<usize>) -> Self {
-		let full = key.start..value.end;
+	pub fn new(key: ByteSpan, value: ByteSpan) -> Self {
+		let full = key.union(&value);
 
 		Self { full, key, value }
 	}
 
-	pub const fn full(&self) -> &Range<usize> {
+	pub const fn full(&self) -> &ByteSpan {
 		&self.full
 	}
 
-	pub const fn key(&self) -> &Range<usize> {
+	pub const fn key(&self) -> &ByteSpan {
 		&self.key
 	}
 
-	pub const fn value(&self) -> &Range<usize> {
+	pub const fn value(&self) -> &ByteSpan {
 		&self.value
+	}
+
+	pub fn index<'a, 'b>(&'a self, s: &'b str) -> (&'b str, &'b str) {
+		(Index::index(s, self.key), Index::index(s, self.value))
 	}
 }
 
@@ -116,61 +129,81 @@ impl Description {
 	fn index(
 		s: &str,
 	) -> (Vec<ProjectRange>, Vec<ContextRange>, Vec<CustomRange>) {
+		const fn is_key_value_byte(byte: u8) -> bool {
+			!byte.is_ascii_whitespace() && byte != b':'
+		}
+
 		let mut projects = Vec::new();
 		let mut contexts = Vec::new();
 		let mut custom = Vec::new();
 
 		let mut cursor = Cursor::new(s.as_bytes());
 
-		let mut word_start = 0;
 		while !cursor.is_eof() {
-			match (cursor.first(), cursor.second()) {
-				// reset word boundry
-				(Some(b' '), _) => {
-					assert_eq!(cursor.consume(), Some(b' '));
-					word_start = cursor.index();
-				}
+			// reset word boundry (todo: handle unicode whitespace)
+			cursor.consume_whitespaces();
+			let word_start = cursor.byte_pos();
 
+			match (cursor.first(), cursor.second()) {
 				// read project
-				(Some(b'+'), Some(b)) if b != b' ' => {
-					cursor.consume_while(|b| b != b' ');
-					let range = ProjectRange::new(word_start..cursor.index());
+				(Some(b'+'), Some(b)) if !b.is_ascii_whitespace() => {
+					cursor.consume_non_whitespaces();
+					let span = ByteSpan::new(word_start, cursor.byte_pos());
+					let range = ProjectRange::new(span);
 					projects.push(range);
 				}
 
 				// read context
-				(Some(b'@'), Some(b)) if b != b' ' => {
-					cursor.consume_while(|b| b != b' ');
-					let range = ContextRange::new(word_start..cursor.index());
+				(Some(b'@'), Some(b)) if !b.is_ascii_whitespace() => {
+					cursor.consume_non_whitespaces();
+					let span = ByteSpan::new(word_start, cursor.byte_pos());
+					let range = ContextRange::new(span);
 					contexts.push(range);
 				}
 
 				// try read custom tag
-				(Some(a), Some(b)) if a != b' ' && b != b' ' => {
-					cursor.consume_while(|b| b != b' ' && b != b':');
+				(Some(_), Some(b)) if !b.is_ascii_whitespace() => {
+					cursor.consume_while(is_key_value_byte);
+
 					if let Some(b':') = cursor.first() {
-						let key_range = word_start..cursor.index();
+						let key_span =
+							ByteSpan::new(word_start, cursor.byte_pos());
+
 						assert_eq!(cursor.consume(), Some(b':'));
-						match cursor.first() {
-							Some(b':') | Some(b' ') => {
-								cursor.consume_while(|b| b != b' ');
-							}
-							_ => {
-								let value_start = cursor.index();
-								cursor.consume_while(|b| b != b' ');
-								let range = CustomRange::new(
-									key_range,
-									value_start..cursor.index(),
-								);
+
+						if key_span.len() > 0
+							&& matches!(cursor.first(), Some(b) if is_key_value_byte(b))
+						{
+							let value_start = cursor.byte_pos();
+							cursor.consume_while(is_key_value_byte);
+
+							let value_span =
+								ByteSpan::new(value_start, cursor.byte_pos());
+
+							if value_span.len() == 0
+								|| matches!(cursor.first(), Some(b) if !b.is_ascii_whitespace())
+							{
+								// Tag value does not end in eof or white space; invalid
+								// Keep word boundaries intact
+								cursor.consume_non_whitespaces();
+							} else {
+								let range =
+									CustomRange::new(key_span, value_span);
 								custom.push(range);
 							}
+						} else {
+							// Keep word boundaries intact
+							cursor.consume_non_whitespaces();
 						}
+					} else {
+						// Keep word boundaries intact
+						cursor.consume_non_whitespaces();
 					}
 				}
 
-				// skip normal word
+				// skip word
 				(Some(_), _) => {
-					cursor.consume_while(|b| b != b' ');
+					cursor.consume_non_whitespaces();
 				}
 
 				// exit on eof
@@ -225,7 +258,7 @@ impl Parse for Description {
 }
 
 macro_rules! simple_iter {
-	( $name:ident => $range:ty, $rangevar:ident) => {
+	( $name:ident => $range:ty, $rangevar:ident, $item:ty) => {
 		#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 		pub struct $name<'a> {
 			description: &'a str,
@@ -244,50 +277,18 @@ macro_rules! simple_iter {
 		}
 
 		impl<'a> Iterator for $name<'a> {
-			type Item = &'a str;
+			type Item = $item;
 
 			fn next(&mut self) -> Option<Self::Item> {
 				let range = self.ranges.get(self.ranges_idx)?;
 				self.ranges_idx += 1;
 
-				// TODO: rm clone
-				Some(&self.description[range.name.clone()])
+				Some(range.index(&self.description))
 			}
 		}
 	};
 }
 
-simple_iter!(ProjectIter => ProjectRange, projects);
-simple_iter!(ContextIter => ContextRange, contexts);
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CustomIter<'a> {
-	description: &'a str,
-	ranges: &'a [CustomRange],
-	ranges_idx: usize,
-}
-
-impl<'a> CustomIter<'a> {
-	fn new(description: &'a Description) -> Self {
-		Self {
-			description: &description.raw,
-			ranges: &description.custom,
-			ranges_idx: 0,
-		}
-	}
-}
-
-impl<'a> Iterator for CustomIter<'a> {
-	type Item = (&'a str, &'a str);
-
-	fn next(&mut self) -> Option<Self::Item> {
-		let range = self.ranges.get(self.ranges_idx)?;
-		self.ranges_idx += 1;
-
-		// TODO: rm clone
-		Some((
-			&self.description[range.key.clone()],
-			&self.description[range.value.clone()],
-		))
-	}
-}
+simple_iter!(ProjectIter => ProjectRange, projects, &'a str);
+simple_iter!(ContextIter => ContextRange, contexts, &'a str);
+simple_iter!(CustomIter => CustomRange, custom, (&'a str, &'a str));

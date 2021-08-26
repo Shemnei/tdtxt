@@ -55,6 +55,7 @@ mod state;
 mod task;
 
 mod parse;
+mod span;
 
 pub use crate::date::{Date, DateCompound};
 pub use crate::description::Description;
@@ -368,11 +369,13 @@ Post signs around the neighborhood +GarageSale
 
 	#[test]
 	fn task_parse_edge() {
-		let input = b"add + some more not::valid @home @work";
+		let input =
+			b"add + some more not::valid also:not:valid @home @work should:";
 		let mut parser = Parser::new(input);
 
-		let task_should =
-			Task::build().build("add + some more not::valid @home @work");
+		let task_should = Task::build().build(
+			"add + some more not::valid also:not:valid @home @work should:",
+		);
 		let task_is = Task::parse(&mut parser);
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();

@@ -1,3 +1,5 @@
+use crate::span::BytePos;
+
 // TODO: make bytespans/pos
 
 pub trait Parse: Sized {
@@ -153,6 +155,14 @@ impl<'a> Cursor<'a> {
 		}
 	}
 
+	pub fn consume_whitespaces(&mut self) {
+		self.consume_while(|b| b.is_ascii_whitespace())
+	}
+
+	pub fn consume_non_whitespaces(&mut self) {
+		self.consume_while(|b| !b.is_ascii_whitespace())
+	}
+
 	pub const fn first(&self) -> Option<u8> {
 		self.nth(0)
 	}
@@ -189,6 +199,11 @@ impl<'a> Cursor<'a> {
 	#[inline(always)]
 	pub const fn index(&self) -> usize {
 		self.index
+	}
+
+	#[inline(always)]
+	pub const fn byte_pos(&self) -> BytePos {
+		BytePos::from_usize(self.index)
 	}
 
 	#[inline(always)]
