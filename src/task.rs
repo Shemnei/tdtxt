@@ -7,7 +7,7 @@ use crate::priority::Priority;
 use crate::state::State;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Todo {
+pub struct Task {
 	// TODO: remove pub
 	pub(crate) state: Option<State>,
 	pub(crate) priority: Option<Priority>,
@@ -15,8 +15,8 @@ pub struct Todo {
 	pub(crate) description: Description,
 }
 
-impl Todo {
-	pub fn build() -> TodoBuilder {
+impl Task {
+	pub fn build() -> TaskBuilder {
 		Default::default()
 	}
 
@@ -37,7 +37,7 @@ impl Todo {
 	}
 }
 
-impl fmt::Display for Todo {
+impl fmt::Display for Task {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let mut s: Vec<String> = Vec::with_capacity(4);
 
@@ -65,35 +65,36 @@ impl From<&str> for Description {
 	}
 }
 
+// TODO: variants for description error, ...
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TodoParseError;
+pub struct TaskParseError;
 
-impl fmt::Display for TodoParseError {
+impl fmt::Display for TaskParseError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse todo")
+		f.write_str("failed to parse task")
 	}
 }
 
-impl std::error::Error for TodoParseError {}
+impl std::error::Error for TaskParseError {}
 
-impl Parse for Todo {
-	type Error = TodoParseError;
+impl Parse for Task {
+	type Error = TaskParseError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
 		let state = State::parse_opt(parser);
 		let priority = Priority::parse_opt(parser);
 		let date_compound = DateCompound::parse_opt(parser);
 		let description =
-			Description::parse(parser).map_err(|_| TodoParseError)?;
+			Description::parse(parser).map_err(|_| TaskParseError)?;
 
-		let todo = Self { state, priority, date_compound, description };
+		let task = Self { state, priority, date_compound, description };
 
-		Ok(todo)
+		Ok(task)
 	}
 }
 
-impl std::str::FromStr for Todo {
-	type Err = TodoParseError;
+impl std::str::FromStr for Task {
+	type Err = TaskParseError;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let mut parser = Parser::new(s.as_bytes());
@@ -102,13 +103,13 @@ impl std::str::FromStr for Todo {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TodoBuilder {
+pub struct TaskBuilder {
 	state: Option<State>,
 	priority: Option<Priority>,
 	date_compound: Option<DateCompound>,
 }
 
-impl TodoBuilder {
+impl TaskBuilder {
 	pub fn new() -> Self {
 		let (state, priority, date_compound) = <_>::default();
 
@@ -136,11 +137,11 @@ impl TodoBuilder {
 		self
 	}
 
-	pub fn build<D>(&mut self, description: D) -> Todo
+	pub fn build<D>(&mut self, description: D) -> Task
 	where
 		D: Into<Description>,
 	{
-		Todo {
+		Task {
 			state: self.state,
 			priority: self.priority,
 			date_compound: self.date_compound,

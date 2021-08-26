@@ -3,18 +3,18 @@
 //! ```rust
 //! use std::str::FromStr as _;
 //!
-//! use tdtxt::{Todo, Date, State, Priority, DateCompound};
+//! use tdtxt::{Task, Date, State, Priority, DateCompound};
 //!
 //! let line = "x (A) 2016-05-20 2016-04-30 measure space for +chapelShelving @chapel due:2016-05-30";
-//! let todo = Todo::from_str(line).unwrap();
+//! let task = Task::from_str(line).unwrap();
 //!
-//! assert_eq!(todo.state(), Some(&State::Done));
-//! assert_eq!(todo.priority(), Some(&Priority::A));
-//! assert_eq!(todo.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
-//! assert_eq!(todo.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
-//! assert_eq!(todo.description().projects(), vec!["chapelShelving"]);
-//! assert_eq!(todo.description().contexts(), vec!["chapel"]);
-//! assert_eq!(todo.description().custom(), vec![("due", "2016-05-30")]);
+//! assert_eq!(task.state(), Some(&State::Done));
+//! assert_eq!(task.priority(), Some(&Priority::A));
+//! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
+//! assert_eq!(task.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
+//! assert_eq!(task.description().projects(), vec!["chapelShelving"]);
+//! assert_eq!(task.description().contexts(), vec!["chapel"]);
+//! assert_eq!(task.description().custom(), vec![("due", "2016-05-30")]);
 //! ```
 
 #![allow(dead_code, rustdoc::private_intra_doc_links)]
@@ -60,14 +60,14 @@ pub use crate::date::{Date, DateCompound};
 pub use crate::description::Description;
 pub use crate::priority::Priority;
 pub use crate::state::State;
-pub use crate::task::Todo;
+pub use crate::task::Task;
 
 pub mod prelude {
 	pub use crate::date::{Date, DateCompound};
 	pub use crate::description::Description;
 	pub use crate::priority::Priority;
 	pub use crate::state::State;
-	pub use crate::task::Todo;
+	pub use crate::task::Task;
 }
 
 #[cfg(test)]
@@ -77,22 +77,22 @@ mod tests {
 	use crate::parse::*;
 	use crate::priority::Priority;
 	use crate::state::State;
-	use crate::task::{Todo, TodoParseError};
+	use crate::task::{Task, TaskParseError};
 
 	#[test]
-	fn todo_display() {
-		let todo = Todo {
+	fn task_display() {
+		let task = Task {
 			state: Some(State::Done),
 			priority: Some(Priority::H),
 			date_compound: None,
 			description: Description::new("Hello World"),
 		};
 
-		assert_eq!(todo.to_string(), "x (H) Hello World");
+		assert_eq!(task.to_string(), "x (H) Hello World");
 	}
 
 	#[test]
-	fn todo_parse() {
+	fn task_parse() {
 		let input = b"x ";
 		let mut parser = Parser::new(input);
 
@@ -146,7 +146,7 @@ mod tests {
 		let input = b"x (Z) 2020-01-01 Hello World";
 		let mut parser = Parser::new(input);
 
-		let todo = Todo {
+		let task = Task {
 			state: Some(State::Done),
 			priority: Some(Priority::Z),
 			date_compound: Some(DateCompound::Created {
@@ -155,160 +155,160 @@ mod tests {
 			description: Description::new("Hello World"),
 		};
 
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 	}
 
 	#[test]
-	fn todo_example() {
+	fn task_example() {
 		let input = b"(A) Thank Mom for the meatballs @phone
 (B) Schedule Goodwill pickup +GarageSale @phone
 Post signs around the neighborhood +GarageSale
 @GroceryStore Eskimo pies";
 		let mut parser = Parser::new(input);
 
-		let todo = Todo::build()
+		let task = Task::build()
 			.priority(Priority::A)
 			.build("Thank Mom for the meatballs @phone");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		let todo = Todo::build()
+		let task = Task::build()
 			.priority(Priority::B)
 			.build("Schedule Goodwill pickup +GarageSale @phone");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		let todo = Todo::build()
+		let task = Task::build()
 			.build("Post signs around the neighborhood +GarageSale");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		let todo = Todo::build().build("@GroceryStore Eskimo pies");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		let task = Task::build().build("@GroceryStore Eskimo pies");
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	#[test]
-	fn todo_rule1() {
+	fn task_rule1() {
 		let input = b"(A) Call Mom";
 		let mut parser = Parser::new(input);
 
-		let todo = Todo::build().priority(Priority::A).build("Call Mom");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		let task = Task::build().priority(Priority::A).build("Call Mom");
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 
 		let input = b"Really gotta call Mom (A) @phone @someday
 (b) Get back to the boss
 (B)->Submit TPS report";
 		let mut parser = Parser::new(input);
 
-		let todo =
-			Todo::build().build("Really gotta call Mom (A) @phone @someday");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		let task =
+			Task::build().build("Really gotta call Mom (A) @phone @someday");
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		let todo = Todo::build().build("(b) Get back to the boss");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		let task = Task::build().build("(b) Get back to the boss");
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		let todo = Todo::build().build("(B)->Submit TPS report");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		let task = Task::build().build("(B)->Submit TPS report");
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	#[test]
-	fn todo_rule2() {
+	fn task_rule2() {
 		let input = b"2011-03-02 Document +TodoTxt task format
 (A) 2011-03-02 Call Mom";
 		let mut parser = Parser::new(input);
 
-		let todo = Todo::build()
+		let task = Task::build()
 			.date_compound(DateCompound::Created {
 				created: Date::ymd(2011, 03, 02),
 			})
 			.build("Document +TodoTxt task format");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		let todo = Todo::build()
+		let task = Task::build()
 			.priority(Priority::A)
 			.date_compound(DateCompound::Created {
 				created: Date::ymd(2011, 03, 02),
 			})
 			.build("Call Mom");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 
 		let input = b"(A) Call Mom 2011-03-02";
 		let mut parser = Parser::new(input);
 
-		let todo =
-			Todo::build().priority(Priority::A).build("Call Mom 2011-03-02");
-		assert_eq!(Todo::parse(&mut parser), Ok(todo));
+		let task =
+			Task::build().priority(Priority::A).build("Call Mom 2011-03-02");
+		assert_eq!(Task::parse(&mut parser), Ok(task));
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	#[test]
-	fn todo_rule3() {
+	fn task_rule3() {
 		let input =
 			b"(A) Call Mom +Family +PeaceLoveAndHappiness @iphone @phone";
 		let mut parser = Parser::new(input);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.priority(Priority::A)
 			.build("Call Mom +Family +PeaceLoveAndHappiness @iphone @phone");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		let projects_should = vec!["Family", "PeaceLoveAndHappiness"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should = vec!["iphone", "phone"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 
 		let input = b"Email SoAndSo at soandso@example.com";
 		let mut parser = Parser::new(input);
 
-		let todo_should =
-			Todo::build().build("Email SoAndSo at soandso@example.com");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_should =
+			Task::build().build("Email SoAndSo at soandso@example.com");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		let projects_should: Vec<&str> = Vec::new();
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = Vec::new();
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 
 		let input = b"Learn how to add 2+2";
 		let mut parser = Parser::new(input);
 
-		let todo_should = Todo::build().build("Learn how to add 2+2");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_should = Task::build().build("Learn how to add 2+2");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		let projects_should: Vec<&str> = Vec::new();
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = Vec::new();
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	#[test]
-	fn todo_parse_full() {
+	fn task_parse_full() {
 		let input =
             b"x (J) 1990-01-01 1980-01-01 Wait ten year @home for +century_waiting author:me";
 		let mut parser = Parser::new(input);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.state(State::Done)
 			.priority(Priority::J)
 			.date_compound(DateCompound::Completed {
@@ -316,43 +316,43 @@ Post signs around the neighborhood +GarageSale
 				completed: Date::ymd(1990, 01, 01),
 			})
 			.build("Wait ten year @home for +century_waiting author:me");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
-		assert_eq!(todo_is.to_string().as_bytes(), input);
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
+		assert_eq!(task_is.to_string().as_bytes(), input);
 		let projects_should: Vec<&str> = vec!["century_waiting"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["home"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![("author", "me")];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	#[test]
-	fn todo_parse_edge() {
+	fn task_parse_edge() {
 		let input = b"add + some more not::valid @home @work";
 		let mut parser = Parser::new(input);
 
-		let todo_should =
-			Todo::build().build("add + some more not::valid @home @work");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_should =
+			Task::build().build("add + some more not::valid @home @work");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		let projects_should: Vec<&str> = Vec::new();
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["home", "work"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = Vec::new();
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	// http://todotxt.org/todo.txt
 	#[test]
-	fn todo_parse_example() {
+	fn task_parse_example() {
 		let input = b"(A) Call Mom @Phone +Family
 (A) Schedule annual checkup +Health
 (B) Outline chapter 5 +Novel @Computer
@@ -363,139 +363,139 @@ Research self-publishing services +Novel @Computer
 x Download Todo.txt mobile app @Phone";
 		let mut parser = Parser::new(input);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.priority(Priority::A)
 			.build("Call Mom @Phone +Family");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"(A) Call Mom @Phone +Family"
 		);
 		let projects_should: Vec<&str> = vec!["Family"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["Phone"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.priority(Priority::A)
 			.build("Schedule annual checkup +Health");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"(A) Schedule annual checkup +Health"
 		);
 		let projects_should: Vec<&str> = vec!["Health"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec![];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.priority(Priority::B)
 			.build("Outline chapter 5 +Novel @Computer");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"(B) Outline chapter 5 +Novel @Computer"
 		);
 		let projects_should: Vec<&str> = vec!["Novel"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["Computer"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.priority(Priority::C)
 			.build("Add cover sheets @Office +TPSReports");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"(C) Add cover sheets @Office +TPSReports"
 		);
 		let projects_should: Vec<&str> = vec!["TPSReports"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["Office"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should =
-			Todo::build().build("Plan backyard herb garden @Home");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_should =
+			Task::build().build("Plan backyard herb garden @Home");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"Plan backyard herb garden @Home"
 		);
 		let projects_should: Vec<&str> = vec![];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["Home"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should = Todo::build().build("Pick up milk @GroceryStore");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_should = Task::build().build("Pick up milk @GroceryStore");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"Pick up milk @GroceryStore"
 		);
 		let projects_should: Vec<&str> = vec![];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["GroceryStore"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.build("Research self-publishing services +Novel @Computer");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"Research self-publishing services +Novel @Computer"
 		);
 		let projects_should: Vec<&str> = vec!["Novel"];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["Computer"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		let todo_should = Todo::build()
+		let task_should = Task::build()
 			.state(State::Done)
 			.build("Download Todo.txt mobile app @Phone");
-		let todo_is = Todo::parse(&mut parser);
-		assert_eq!(todo_is, Ok(todo_should));
-		let todo_is = todo_is.unwrap();
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
 		assert_eq!(
-			todo_is.to_string().as_bytes(),
+			task_is.to_string().as_bytes(),
 			b"x Download Todo.txt mobile app @Phone"
 		);
 		let projects_should: Vec<&str> = vec![];
-		assert_eq!(todo_is.description.projects(), projects_should);
+		assert_eq!(task_is.description.projects(), projects_should);
 		let contexts_should: Vec<&str> = vec!["Phone"];
-		assert_eq!(todo_is.description.contexts(), contexts_should);
+		assert_eq!(task_is.description.contexts(), contexts_should);
 		let custom_should: Vec<(&str, &str)> = vec![];
-		assert_eq!(todo_is.description.custom(), custom_should);
+		assert_eq!(task_is.description.custom(), custom_should);
 
-		assert_eq!(Todo::parse(&mut parser), Err(TodoParseError));
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
 	}
 
 	#[test]
