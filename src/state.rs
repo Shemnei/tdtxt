@@ -4,13 +4,21 @@ use crate::parse::{Parse, Parser};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum State {
+	Open,
 	Done,
+}
+
+impl Default for State {
+	fn default() -> Self {
+		Self::Open
+	}
 }
 
 impl fmt::Display for State {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Done => f.write_str("x"),
+			Self::Open => Ok(()),
 		}
 	}
 }

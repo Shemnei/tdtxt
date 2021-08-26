@@ -27,3 +27,6 @@ lto = "thin"
 opt-level = 3
 # Reduces parallel code generation units to increase optimizations
 codegen-units = 1
+
+[dev-dependencies]
+pretty_assertions = "0.7.2"

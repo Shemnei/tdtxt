@@ -8,11 +8,10 @@ use crate::state::State;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Task {
-	// TODO: remove pub
-	pub(crate) state: Option<State>,
-	pub(crate) priority: Option<Priority>,
-	pub(crate) date_compound: Option<DateCompound>,
-	pub(crate) description: Description,
+	pub state: State,
+	pub priority: Option<Priority>,
+	pub date_compound: Option<DateCompound>,
+	pub description: Description,
 }
 
 impl Task {
@@ -20,8 +19,8 @@ impl Task {
 		Default::default()
 	}
 
-	pub const fn state(&self) -> Option<&State> {
-		self.state.as_ref()
+	pub const fn state(&self) -> &State {
+		&self.state
 	}
 
 	pub const fn priority(&self) -> Option<&Priority> {
@@ -41,8 +40,8 @@ impl fmt::Display for Task {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let mut s: Vec<String> = Vec::with_capacity(4);
 
-		if let Some(state) = self.state {
-			s.push(state.to_string());
+		if self.state != State::Open {
+			s.push(self.state.to_string());
 		}
 
 		if let Some(priority) = self.priority {
@@ -81,7 +80,7 @@ impl Parse for Task {
 	type Error = TaskParseError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let state = State::parse_opt(parser);
+		let state = State::parse_opt(parser).unwrap_or_default();
 		let priority = Priority::parse_opt(parser);
 		let date_compound = DateCompound::parse_opt(parser);
 		let description =
@@ -142,7 +141,7 @@ impl TaskBuilder {
 		D: Into<Description>,
 	{
 		Task {
-			state: self.state,
+			state: self.state.unwrap_or_default(),
 			priority: self.priority,
 			date_compound: self.date_compound,
 			description: description.into(),

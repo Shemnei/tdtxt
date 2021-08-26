@@ -70,7 +70,7 @@ impl Parse for Date {
 		let _ = parser.expect_u8(b'-').ok_or(DateParseError)?;
 		let d1 = parser.parse_digit().ok_or(DateParseError)?;
 		let d2 = parser.parse_digit().ok_or(DateParseError)?;
-		let _ = parser.expect_u8(b' ').ok_or(DateParseError)?;
+		let _ = parser.expect_whitespace().ok_or(DateParseError)?;
 
 		let year = (y1 as i32 * 1000)
 			+ (y2 as i32 * 100)

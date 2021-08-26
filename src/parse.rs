@@ -31,6 +31,10 @@ impl<'a> Parser<'a> {
 		Self { cursor: Cursor::new(bytes) }
 	}
 
+	pub const fn is_eof(&self) -> bool {
+		self.cursor.is_eof()
+	}
+
 	pub fn parse_u8(&mut self) -> Option<u8> {
 		self.cursor.consume()
 	}
@@ -86,6 +90,15 @@ impl<'a> Parser<'a> {
 		if matches!(self.cursor.first(), Some(x) if x == expect) {
 			self.cursor.advance(1);
 			Some(expect)
+		} else {
+			None
+		}
+	}
+
+	pub fn expect_whitespace(&mut self) -> Option<()> {
+		if matches!(self.cursor.first(), Some(x) if x.is_ascii_whitespace()) {
+			self.cursor.advance(1);
+			Some(())
 		} else {
 			None
 		}

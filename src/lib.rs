@@ -8,7 +8,7 @@
 //! let line = "x (A) 2016-05-20 2016-04-30 measure space for +chapelShelving @chapel due:2016-05-30";
 //! let task = Task::from_str(line).unwrap();
 //!
-//! assert_eq!(task.state(), Some(&State::Done));
+//! assert_eq!(task.state(), &State::Done);
 //! assert_eq!(task.priority(), Some(&Priority::A));
 //! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
 //! assert_eq!(task.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
@@ -48,6 +48,8 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_alias))]
 
+// TODO: better error messages / diagnostics
+
 mod date;
 mod description;
 mod priority;
@@ -73,6 +75,8 @@ pub mod prelude {
 
 #[cfg(test)]
 mod tests {
+	use pretty_assertions::assert_eq;
+
 	use crate::date::{Date, DateCompound};
 	use crate::description::Description;
 	use crate::parse::*;
@@ -83,7 +87,7 @@ mod tests {
 	#[test]
 	fn task_display() {
 		let task = Task {
-			state: Some(State::Done),
+			state: State::Done,
 			priority: Some(Priority::H),
 			date_compound: None,
 			description: Description::new("Hello World"),
@@ -148,7 +152,7 @@ mod tests {
 		let mut parser = Parser::new(input);
 
 		let task = Task {
-			state: Some(State::Done),
+			state: State::Done,
 			priority: Some(Priority::Z),
 			date_compound: Some(DateCompound::Created {
 				created: Date::ymd(2020, 01, 01),
@@ -270,7 +274,7 @@ Post signs around the neighborhood +GarageSale
 			task_is.description.contexts().collect::<Vec<_>>(),
 			contexts_should
 		);
-		let custom_should: Vec<(&str, &str)> = Vec::new();
+		let custom_should: Vec<(&str, &str)> = vec![];
 		assert_eq!(
 			task_is.description.custom().collect::<Vec<_>>(),
 			custom_should
@@ -286,17 +290,17 @@ Post signs around the neighborhood +GarageSale
 		let task_is = Task::parse(&mut parser);
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
-		let projects_should: Vec<&str> = Vec::new();
+		let projects_should: Vec<&str> = vec![];
 		assert_eq!(
 			task_is.description.projects().collect::<Vec<_>>(),
 			projects_should
 		);
-		let contexts_should: Vec<&str> = Vec::new();
+		let contexts_should: Vec<&str> = vec![];
 		assert_eq!(
 			task_is.description.contexts().collect::<Vec<_>>(),
 			contexts_should
 		);
-		let custom_should: Vec<(&str, &str)> = Vec::new();
+		let custom_should: Vec<(&str, &str)> = vec![];
 		assert_eq!(
 			task_is.description.custom().collect::<Vec<_>>(),
 			custom_should
@@ -311,17 +315,17 @@ Post signs around the neighborhood +GarageSale
 		let task_is = Task::parse(&mut parser);
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
-		let projects_should: Vec<&str> = Vec::new();
+		let projects_should: Vec<&str> = vec![];
 		assert_eq!(
 			task_is.description.projects().collect::<Vec<_>>(),
 			projects_should
 		);
-		let contexts_should: Vec<&str> = Vec::new();
+		let contexts_should: Vec<&str> = vec![];
 		assert_eq!(
 			task_is.description.contexts().collect::<Vec<_>>(),
 			contexts_should
 		);
-		let custom_should: Vec<(&str, &str)> = Vec::new();
+		let custom_should: Vec<(&str, &str)> = vec![];
 		assert_eq!(
 			task_is.description.custom().collect::<Vec<_>>(),
 			custom_should
@@ -379,7 +383,7 @@ Post signs around the neighborhood +GarageSale
 		let task_is = Task::parse(&mut parser);
 		assert_eq!(task_is, Ok(task_should));
 		let task_is = task_is.unwrap();
-		let projects_should: Vec<&str> = Vec::new();
+		let projects_should: Vec<&str> = vec![];
 		assert_eq!(
 			task_is.description.projects().collect::<Vec<_>>(),
 			projects_should
@@ -389,7 +393,32 @@ Post signs around the neighborhood +GarageSale
 			task_is.description.contexts().collect::<Vec<_>>(),
 			contexts_should
 		);
-		let custom_should: Vec<(&str, &str)> = Vec::new();
+		let custom_should: Vec<(&str, &str)> = vec![];
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
+
+		assert_eq!(Task::parse(&mut parser), Err(TaskParseError));
+
+		let input = b"2014-10 key:value";
+		let mut parser = Parser::new(input);
+
+		let task_should = Task::build().build("2014-10 key:value");
+		let task_is = Task::parse(&mut parser);
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
+		let projects_should: Vec<&str> = vec![];
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
+		let contexts_should: Vec<&str> = vec![];
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
+		let custom_should: Vec<(&str, &str)> = vec![("key", "value")];
 		assert_eq!(
 			task_is.description.custom().collect::<Vec<_>>(),
 			custom_should
