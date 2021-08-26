@@ -1,31 +1,88 @@
 use std::fmt;
 
+#[cfg(feature = "chrono")]
 use chrono::prelude::*;
 
 use crate::parse::{Parse, Parser};
 
+#[cfg(not(feature = "chrono"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SimpleDate {
+	year: i16,
+	month: u8,
+	day: u8,
+}
+
+#[cfg(not(feature = "chrono"))]
+impl SimpleDate {
+	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
+		assert!((1..=12).contains(&month), "month must be between 1-12");
+		assert!((1..=31).contains(&day), "day must be between 1-31");
+
+		Self { year, month, day }
+	}
+
+	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
+		if (1..=12).contains(&month) && (1..=31).contains(&day) {
+			Some(Self { year, month, day })
+		} else {
+			None
+		}
+	}
+}
+
+#[cfg(not(feature = "chrono"))]
+impl fmt::Display for SimpleDate {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{:04}-{:02}-{:02}", &self.year, &self.month, &self.day)
+	}
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Date {
+	#[cfg(feature = "chrono")]
 	inner: chrono::Date<Local>,
+
+	#[cfg(not(feature = "chrono"))]
+	inner: SimpleDate,
 }
 
 impl Date {
+	#[cfg(feature = "chrono")]
 	const DATE_FORMAT: &'static str = "%Y-%m-%d";
 
-	pub fn ymd(year: i32, month: u32, day: u32) -> Self {
-		Self { inner: Local.ymd(year, month, day) }
+	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
+		#[cfg(feature = "chrono")]
+		{
+			Self { inner: Local.ymd(year as i32, month as u32, day as u32) }
+		}
+
+		#[cfg(not(feature = "chrono"))]
+		{
+			Self { inner: SimpleDate::ymd(year, month, day) }
+		}
 	}
 
-	pub fn ymd_opt(year: i32, month: u32, day: u32) -> Option<Self> {
-		let date = match Local.ymd_opt(year, month, day) {
-			// TODO: additional "real" error
-			chrono::LocalResult::None => return None,
-			x => x.unwrap(),
-		};
+	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
+		#[cfg(feature = "chrono")]
+		{
+			let date =
+				match Local.ymd_opt(year as i32, month as u32, day as u32) {
+					// TODO: additional "real" error
+					chrono::LocalResult::None => return None,
+					x => x.unwrap(),
+				};
 
-		Some(Self { inner: date })
+			Some(Self { inner: date })
+		}
+
+		#[cfg(not(feature = "chrono"))]
+		{
+			Some(Self { inner: SimpleDate::ymd_opt(year, month, day)? })
+		}
 	}
 
+	#[cfg(feature = "chrono")]
 	pub fn today() -> Self {
 		Self { inner: Local::today() }
 	}
@@ -33,13 +90,15 @@ impl Date {
 
 impl fmt::Display for Date {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(&self.inner.format(Self::DATE_FORMAT).to_string())
-	}
-}
+		#[cfg(feature = "chrono")]
+		{
+			f.write_str(&self.inner.format(Self::DATE_FORMAT).to_string())
+		}
 
-impl From<(i32, u32, u32)> for Date {
-	fn from(value: (i32, u32, u32)) -> Self {
-		Self::ymd(value.0, value.1, value.2)
+		#[cfg(not(feature = "chrono"))]
+		{
+			fmt::Display::fmt(&self.inner, f)
+		}
 	}
 }
 
@@ -72,20 +131,14 @@ impl Parse for Date {
 		let d2 = parser.parse_digit().ok_or(DateParseError)?;
 		let _ = parser.expect_whitespace().ok_or(DateParseError)?;
 
-		let year = (y1 as i32 * 1000)
-			+ (y2 as i32 * 100)
-			+ (y3 as i32 * 10)
-			+ y4 as i32;
-		let month = (m1 as u32 * 10) + m2 as u32;
-		let day = (d1 as u32 * 10) + d2 as u32;
+		let year = (y1 as i16 * 1000)
+			+ (y2 as i16 * 100)
+			+ (y3 as i16 * 10)
+			+ y4 as i16;
+		let month = (m1 * 10) + m2;
+		let day = (d1 * 10) + d2;
 
-		let date = match Local.ymd_opt(year, month, day) {
-			// TODO: additional "real" error
-			chrono::LocalResult::None => return Err(DateParseError),
-			x => x.unwrap(),
-		};
-
-		Ok(Self { inner: date })
+		Self::ymd_opt(year, month, day).ok_or(DateParseError)
 	}
 }
 

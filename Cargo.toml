@@ -12,12 +12,11 @@ exclude = ["/Makefile", "/.git/", "/.github/"]
 keywords = ["todotxt", "todo", "todo-txt", "parser"]
 
 [dependencies]
-chrono = { version = "0.4.19", features = ["serde"] }
-serde = { version = "1.0.117", features = ["derive"] }
+chrono = { version = "0.4.19", optional = true }
+serde = { version = "1.0.117", features = ["derive"], optional = true }
 
 [features]
-
-# TODO: make serde/chrono a feature
+default = ["chrono"]
 
 [profile.dev]
 opt-level = 0
