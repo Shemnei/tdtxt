@@ -3,15 +3,14 @@
 //! ```rust
 //! use std::str::FromStr as _;
 //!
-//! use tdtxt::todo::{Date, State, Priority, DateCompound};
+//! use tdtxt::todo::{Todo, Date, State, Priority, DateCompound};
 //!
 //! let line = "x (A) 2016-05-20 2016-04-30 measure space for +chapelShelving @chapel due:2016-05-30";
-//! let todo = tdtxt::todo::Todo::from_str(line).unwrap();
+//! let todo = Todo::from_str(line).unwrap();
 //!
 //! assert_eq!(todo.state(), Some(&State::Done));
 //! assert_eq!(todo.priority(), Some(&Priority::A));
-//! assert_eq!(todo.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30),
-//! completed: Date::ymd(2016, 5, 20) }));
+//! assert_eq!(todo.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
 //! assert_eq!(todo.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
 //! assert_eq!(todo.description().projects(), vec!["chapelShelving"]);
 //! assert_eq!(todo.description().contexts(), vec!["chapel"]);
