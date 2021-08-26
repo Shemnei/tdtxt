@@ -47,11 +47,6 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
-      - name: Run cargo fmt (all features)
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all --features "all" -- --check
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
