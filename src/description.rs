@@ -144,6 +144,7 @@ impl Description {
 			cursor.consume_whitespaces();
 			let word_start = cursor.byte_pos();
 
+			// TODO: put into other functions to reduce complexity
 			match (cursor.first(), cursor.second()) {
 				// read project
 				(Some(b'+'), Some(b)) if !b.is_ascii_whitespace() => {
@@ -209,6 +210,8 @@ impl Description {
 				// exit on eof
 				(None, _) => break,
 			}
+
+			// TODO: check and warn if not at word boundry
 		}
 
 		(projects, contexts, custom)

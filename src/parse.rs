@@ -1,7 +1,5 @@
 use crate::span::BytePos;
 
-// TODO: make bytespans/pos
-
 pub trait Parse: Sized {
 	type Error: std::error::Error;
 
@@ -114,9 +112,8 @@ impl<'a> Parser<'a> {
 
 		if self.cursor.in_bounds(index_end) {
 			let slice = &self.cursor.bytes[self.cursor.index..=index_end];
-			let diff = slice.iter().zip(expect).find(|(a, b)| a != b);
 
-			if diff.is_none() {
+			if slice == expect {
 				self.cursor.advance(len);
 				Some(slice)
 			} else {
