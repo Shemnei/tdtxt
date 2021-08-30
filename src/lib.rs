@@ -43,9 +43,9 @@
 #![allow(dead_code, rustdoc::private_intra_doc_links)]
 #![deny(
     // Documentation
-	// TODO: rustdoc::broken_intra_doc_links,
-	// TODO: rustdoc::missing_crate_level_docs,
-	// TODO: missing_docs,
+	rustdoc::broken_intra_doc_links,
+	rustdoc::missing_crate_level_docs,
+	missing_docs,
 	// TODO: clippy::missing_docs_in_private_items,
 
     // Other
