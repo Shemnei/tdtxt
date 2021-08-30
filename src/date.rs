@@ -66,11 +66,9 @@ impl Date {
 	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		#[cfg(feature = "chrono")]
 		{
-			let date =
-				match Local.ymd_opt(year as i32, month as u32, day as u32) {
-					chrono::LocalResult::None => return None,
-					x => x.unwrap(),
-				};
+			let date = Local
+				.ymd_opt(year as i32, month as u32, day as u32)
+				.earliest()?;
 
 			Some(Self { inner: date })
 		}
