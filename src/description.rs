@@ -2,7 +2,7 @@ use std::fmt;
 use std::ops::{Deref, Index};
 
 use crate::parse::{Cursor, Parse, Parser};
-use crate::span::ByteSpan;
+use crate::span::{BytePos, ByteSpan};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct ProjectRange {
@@ -129,10 +129,6 @@ impl Description {
 	fn index(
 		s: &str,
 	) -> (Vec<ProjectRange>, Vec<ContextRange>, Vec<CustomRange>) {
-		const fn is_key_value_byte(byte: u8) -> bool {
-			!byte.is_ascii_whitespace() && byte != b':'
-		}
-
 		let mut projects = Vec::new();
 		let mut contexts = Vec::new();
 		let mut custom = Vec::new();
@@ -144,58 +140,23 @@ impl Description {
 			cursor.consume_whitespaces();
 			let word_start = cursor.byte_pos();
 
-			// TODO: put into other functions to reduce complexity
 			match (cursor.first(), cursor.second()) {
 				// read project
 				(Some(b'+'), Some(b)) if !b.is_ascii_whitespace() => {
-					cursor.consume_non_whitespaces();
-					let span = ByteSpan::new(word_start, cursor.byte_pos());
-					let range = ProjectRange::new(span);
-					projects.push(range);
+					projects.push(Self::read_project(&mut cursor, word_start));
 				}
 
 				// read context
 				(Some(b'@'), Some(b)) if !b.is_ascii_whitespace() => {
-					cursor.consume_non_whitespaces();
-					let span = ByteSpan::new(word_start, cursor.byte_pos());
-					let range = ContextRange::new(span);
-					contexts.push(range);
+					contexts.push(Self::read_context(&mut cursor, word_start));
 				}
 
 				// try read custom tag
 				(Some(_), Some(b)) if !b.is_ascii_whitespace() => {
-					cursor.consume_while(is_key_value_byte);
-
-					if let Some(b':') = cursor.first() {
-						let key_span =
-							ByteSpan::new(word_start, cursor.byte_pos());
-
-						assert_eq!(cursor.consume(), Some(b':'));
-
-						if key_span.len() > 0
-							&& matches!(cursor.first(), Some(b) if is_key_value_byte(b))
-						{
-							let value_start = cursor.byte_pos();
-							cursor.consume_while(is_key_value_byte);
-
-							let value_span =
-								ByteSpan::new(value_start, cursor.byte_pos());
-
-							if value_span.len() == 0
-								|| matches!(cursor.first(), Some(b) if !b.is_ascii_whitespace())
-							{
-								// Tag value does not end in eof or white space; invalid
-								// Keep word boundaries intact
-								cursor.consume_non_whitespaces();
-							} else {
-								let range =
-									CustomRange::new(key_span, value_span);
-								custom.push(range);
-							}
-						} else {
-							// Keep word boundaries intact
-							cursor.consume_non_whitespaces();
-						}
+					if let Some(range) =
+						Self::read_custom(&mut cursor, word_start)
+					{
+						custom.push(range);
 					} else {
 						// Keep word boundaries intact
 						cursor.consume_non_whitespaces();
@@ -212,9 +173,65 @@ impl Description {
 			}
 
 			// TODO: check and warn if not at word boundry
+			debug_assert!(cursor
+				.first()
+				.map(|b| b.is_ascii_whitespace())
+				.unwrap_or(true));
 		}
 
 		(projects, contexts, custom)
+	}
+
+	fn read_project(
+		cursor: &mut Cursor<'_>,
+		word_start: BytePos,
+	) -> ProjectRange {
+		cursor.consume_non_whitespaces();
+		let span = ByteSpan::new(word_start, cursor.byte_pos());
+		ProjectRange::new(span)
+	}
+
+	fn read_context(
+		cursor: &mut Cursor<'_>,
+		word_start: BytePos,
+	) -> ContextRange {
+		cursor.consume_non_whitespaces();
+		let span = ByteSpan::new(word_start, cursor.byte_pos());
+		ContextRange::new(span)
+	}
+
+	fn read_custom(
+		cursor: &mut Cursor<'_>,
+		word_start: BytePos,
+	) -> Option<CustomRange> {
+		const fn is_key_value_byte(byte: u8) -> bool {
+			!byte.is_ascii_whitespace() && byte != b':'
+		}
+
+		cursor.consume_while(is_key_value_byte);
+
+		if let Some(b':') = cursor.first() {
+			let key_span = ByteSpan::new(word_start, cursor.byte_pos());
+
+			debug_assert_eq!(cursor.consume(), Some(b':'));
+
+			if key_span.len() > 0
+				&& matches!(cursor.first(), Some(b) if is_key_value_byte(b))
+			{
+				let value_start = cursor.byte_pos();
+				cursor.consume_while(is_key_value_byte);
+
+				let value_span = ByteSpan::new(value_start, cursor.byte_pos());
+
+				if !(value_span.len() == 0
+					|| matches!(cursor.first(), Some(b) if !b.is_ascii_whitespace()))
+				{
+					return Some(CustomRange::new(key_span, value_span));
+				}
+			}
+		}
+
+		None
 	}
 }
 
