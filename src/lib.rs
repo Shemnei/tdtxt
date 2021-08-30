@@ -71,10 +71,6 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_alias))]
 
-// TODO:
-// - better error messages / diagnostics
-// - parse each component without the trailing space needed
-
 mod date;
 mod description;
 mod priority;
