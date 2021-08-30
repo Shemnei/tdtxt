@@ -41,6 +41,13 @@ install:
 doc:
 	cargo doc --all --document-private-items
 
+bench:
+	cargo bench --all
+
+bencho:
+	cargo bench --all
+	xdg-open target/criterion/report/index.html
+
 # utility
 # can i commit
 cic: test lint doc
