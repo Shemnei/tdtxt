@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Created `prelude` module for quick importing of all important features
 - The crate now exports all useful definitions in the root
 - Added enum variant `State::Open`
+- Implemented `std::std::FromStr` for all task components
 
 ### Changed
 
