@@ -7,7 +7,7 @@ description = "A serializer/deserializer for the todo.txt format"
 documentation = "https://github.com/Shemnei/tdtxt"
 homepage = "https://github.com/Shemnei/tdtxt"
 repository = "https://github.com/Shemnei/tdtxt"
-license= "Unlicense"
+license = "Unlicense"
 exclude = ["/Makefile", "/.git/", "/.github/"]
 keywords = ["todotxt", "todo", "todo-txt", "parser"]
 
