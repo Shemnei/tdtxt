@@ -19,6 +19,62 @@ pub trait Parse: Sized {
 	}
 }
 
+#[macro_export]
+macro_rules! parse_error {
+	( $name:ident : $ty:literal ) => {
+		#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
+		pub struct $name {
+			msg: Option<::std::borrow::Cow<'static, str>>,
+		}
+
+		impl $name {
+			pub fn with_msg<M: Into<::std::borrow::Cow<'static, str>>>(
+				msg: M,
+			) -> Self {
+				Self { msg: Some(msg.into()) }
+			}
+		}
+
+		impl ::std::fmt::Display for $name {
+			fn fmt(
+				&self,
+				f: &mut ::std::fmt::Formatter<'_>,
+			) -> ::std::fmt::Result {
+				if let Some(msg) = &self.msg {
+					write!(f, concat!("failed to parse ", $ty, ": {}"), msg)
+				} else {
+					f.write_str(concat!("failed to parse ", $ty))
+				}
+			}
+		}
+
+		impl ::std::error::Error for $name {}
+	};
+}
+
+#[macro_export]
+macro_rules! impl_fromstr {
+	( $ty:ty ) => {
+		impl ::std::str::FromStr for $ty {
+			type Err = <Self as Parse>::Error;
+
+			fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+				let mut parser = Parser::new(s.as_bytes());
+
+				let tmp = <$ty>::parse(&mut parser)?;
+
+				if parser.is_eof() {
+					Ok(tmp)
+				} else {
+					Err(<Self as Parse>::Error::with_msg(
+						"more tokens in input",
+					))
+				}
+			}
+		}
+	};
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Parser<'a> {
 	cursor: Cursor<'a>,
@@ -122,6 +178,10 @@ impl<'a> Parser<'a> {
 		} else {
 			None
 		}
+	}
+
+	pub const fn peek(&self) -> Option<u8> {
+		self.cursor.first()
 	}
 }
 

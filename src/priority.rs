@@ -1,6 +1,5 @@
 use std::cmp::Ordering;
 use std::convert::TryFrom;
-use std::fmt;
 
 use crate::parse::{Parse, Parser};
 
@@ -94,26 +93,23 @@ impl Ord for Priority {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParsePriorityError;
-
-impl fmt::Display for ParsePriorityError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse priority")
-	}
-}
-
-impl std::error::Error for ParsePriorityError {}
+crate::parse_error!(ParsePriorityError: "priority");
 
 impl Parse for Priority {
 	type Error = ParsePriorityError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let _ = parser.expect_u8(b'(').ok_or(ParsePriorityError)?;
-		let priority = parser.parse_alpha_upper().ok_or(ParsePriorityError)?;
-		let priority =
-			Self::try_from(priority).map_err(|_| ParsePriorityError)?;
-		let _ = parser.expect_slice(b") ").ok_or(ParsePriorityError)?;
+		let _ =
+			parser.expect_u8(b'(').ok_or_else(ParsePriorityError::default)?;
+		let priority = parser
+			.parse_alpha_upper()
+			.ok_or_else(ParsePriorityError::default)?;
+		let priority = Self::try_from(priority)
+			.map_err(|_| ParsePriorityError::default())?;
+		let _ =
+			parser.expect_u8(b')').ok_or_else(ParsePriorityError::default)?;
 		Ok(priority)
 	}
 }
+
+crate::impl_fromstr!(Priority);

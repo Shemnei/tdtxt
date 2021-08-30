@@ -71,7 +71,9 @@
 )]
 #![cfg_attr(docsrs, feature(doc_cfg), feature(doc_alias))]
 
-// TODO: better error messages / diagnostics
+// TODO:
+// - better error messages / diagnostics
+// - parse each component without the trailing space needed
 
 mod date;
 mod description;
@@ -121,28 +123,28 @@ mod tests {
 
 	#[test]
 	fn task_parse() {
-		let input = b"x ";
+		let input = b"x";
 		let mut parser = Parser::new(input);
 
 		assert_eq!(State::parse(&mut parser), Ok(State::Done));
 
-		let input = b"(H) ";
+		let input = b"(H)";
 		let mut parser = Parser::new(input);
 
 		assert_eq!(Priority::parse(&mut parser), Ok(Priority::H));
 
-		let input = b"2020-01-01 ";
+		let input = b"2020-01-01";
 		let mut parser = Parser::new(input);
 
 		assert_eq!(Date::parse(&mut parser), Ok(Date::ymd(2020, 01, 01)));
 
-		let input = b"1234-07-16 ";
+		let input = b"1234-07-16";
 		let mut parser = Parser::new(input);
 
 		let d = DateCompound::Created { created: Date::ymd(1234, 07, 16) };
 		assert_eq!(DateCompound::parse(&mut parser), Ok(d));
 
-		let input = b"2000-01-01 1970-01-01 ";
+		let input = b"2000-01-01 1970-01-01";
 		let mut parser = Parser::new(input);
 
 		let d = DateCompound::Completed {

@@ -102,34 +102,22 @@ impl fmt::Display for Date {
 	}
 }
 
-// TODO: impl TryFrom
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParseDateError;
-
-impl fmt::Display for ParseDateError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse date")
-	}
-}
-
-impl std::error::Error for ParseDateError {}
+crate::parse_error!(ParseDateError: "date");
 
 impl Parse for Date {
 	type Error = ParseDateError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let y1 = parser.parse_digit().ok_or(ParseDateError)?;
-		let y2 = parser.parse_digit().ok_or(ParseDateError)?;
-		let y3 = parser.parse_digit().ok_or(ParseDateError)?;
-		let y4 = parser.parse_digit().ok_or(ParseDateError)?;
-		let _ = parser.expect_u8(b'-').ok_or(ParseDateError)?;
-		let m1 = parser.parse_digit().ok_or(ParseDateError)?;
-		let m2 = parser.parse_digit().ok_or(ParseDateError)?;
-		let _ = parser.expect_u8(b'-').ok_or(ParseDateError)?;
-		let d1 = parser.parse_digit().ok_or(ParseDateError)?;
-		let d2 = parser.parse_digit().ok_or(ParseDateError)?;
-		let _ = parser.expect_whitespace().ok_or(ParseDateError)?;
+		let y1 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let y2 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let y3 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let y4 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let _ = parser.expect_u8(b'-').ok_or_else(ParseDateError::default)?;
+		let m1 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let m2 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let _ = parser.expect_u8(b'-').ok_or_else(ParseDateError::default)?;
+		let d1 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let d2 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
 
 		let year = (y1 as i16 * 1000)
 			+ (y2 as i16 * 100)
@@ -138,9 +126,11 @@ impl Parse for Date {
 		let month = (m1 * 10) + m2;
 		let day = (d1 * 10) + d2;
 
-		Self::ymd_opt(year, month, day).ok_or(ParseDateError)
+		Self::ymd_opt(year, month, day).ok_or_else(ParseDateError::default)
 	}
 }
+
+crate::impl_fromstr!(Date);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateCompound {
@@ -199,29 +189,37 @@ where
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParseDateCompoundError;
-
-impl fmt::Display for ParseDateCompoundError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse date compound")
-	}
-}
-
-impl std::error::Error for ParseDateCompoundError {}
+crate::parse_error!(ParseDateCompoundError: "date compound");
 
 impl Parse for DateCompound {
 	type Error = ParseDateCompoundError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let date1 = Date::parse_opt(parser).ok_or(ParseDateCompoundError)?;
-		let compound = match Date::parse_opt(parser) {
-			Some(date2) => {
-				Self::Completed { created: date2, completed: date1 }
-			}
-			None => Self::Created { created: date1 },
-		};
+		let date1 = Date::parse_opt(parser)
+			.ok_or_else(ParseDateCompoundError::default)?;
 
-		Ok(compound)
+		let mut p_copy = *parser;
+
+		if p_copy.expect_whitespace().is_some() {
+			if let Some(date2) = Date::parse_opt(&mut p_copy) {
+				// Check if eof or white space; if not it is a single date
+				if p_copy
+					.peek()
+					.map(|c| c.is_ascii_whitespace())
+					.unwrap_or(true)
+				{
+					*parser = p_copy;
+
+					return Ok(Self::Completed {
+						created: date2,
+						completed: date1,
+					});
+				}
+			}
+		}
+
+		Ok(Self::Created { created: date1 })
 	}
 }
+
+crate::impl_fromstr!(DateCompound);

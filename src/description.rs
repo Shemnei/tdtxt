@@ -232,25 +232,17 @@ impl Deref for Description {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct ParseDescriptionError;
-
-impl fmt::Display for ParseDescriptionError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse description")
-	}
-}
-
-impl std::error::Error for ParseDescriptionError {}
+crate::parse_error!(ParseDescriptionError: "description");
 
 impl Parse for Description {
 	type Error = ParseDescriptionError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let description =
-			parser.parse_until(b'\n').ok_or(ParseDescriptionError)?;
+		let description = parser
+			.parse_until(b'\n')
+			.ok_or_else(ParseDescriptionError::default)?;
 		let description = std::str::from_utf8(description)
-			.map_err(|_| ParseDescriptionError)?;
+			.map_err(|_| ParseDescriptionError::default())?;
 		let description = Self::new(description);
 
 		// consume possible new line
@@ -259,6 +251,8 @@ impl Parse for Description {
 		Ok(description)
 	}
 }
+
+crate::impl_fromstr!(Description);
 
 macro_rules! simple_iter {
 	( $name:ident => $range:ty, $rangevar:ident, $item:ty) => {

@@ -80,9 +80,28 @@ impl Parse for Task {
 	type Error = ParseTaskError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let state = State::parse_opt(parser).unwrap_or_default();
-		let priority = Priority::parse_opt(parser);
-		let date_compound = DateCompound::parse_opt(parser);
+		macro_rules! try_parse {
+			( $parser:ident : $ty:ty ) => {{
+				let mut p_copy = *parser;
+
+				if let Some(ty) = <$ty>::parse_opt(&mut p_copy) {
+					if p_copy.is_eof() || p_copy.expect_whitespace().is_some()
+					{
+						*parser = p_copy;
+						Some(ty)
+					} else {
+						None
+					}
+				} else {
+					None
+				}
+			}};
+		}
+
+		let state = try_parse!(parser: State).unwrap_or_default();
+		let priority = try_parse!(parser: Priority);
+		let date_compound = try_parse!(parser: DateCompound);
+
 		let description =
 			Description::parse(parser).map_err(|_| ParseTaskError)?;
 
