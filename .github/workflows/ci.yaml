@@ -23,6 +23,11 @@ jobs:
         with:
           command: test
           args: --all
+      - name: Run cargo test (all features)
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all --features "all"
 
   lints:
     name: Lints
@@ -47,3 +52,8 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+      - name: Run cargo clippy (all features)
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --features "all" -- -D warnings

@@ -4,36 +4,37 @@ use crate::parse::{Parse, Parser};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum State {
+	Open,
 	Done,
+}
+
+impl Default for State {
+	fn default() -> Self {
+		Self::Open
+	}
 }
 
 impl fmt::Display for State {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Self::Done => f.write_str("x"),
+			Self::Open => Ok(()),
 		}
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct StateParseError;
-
-impl fmt::Display for StateParseError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse state")
-	}
-}
-
-impl std::error::Error for StateParseError {}
+crate::parse_error!(ParseStateError : "state");
 
 impl Parse for State {
-	type Error = StateParseError;
+	type Error = ParseStateError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		if parser.expect_slice(b"x ").is_some() {
+		if parser.expect_u8(b'x').is_some() {
 			Ok(Self::Done)
 		} else {
-			Err(StateParseError)
+			Err(ParseStateError::default())
 		}
 	}
 }
+
+crate::impl_fromstr!(State);

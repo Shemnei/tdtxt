@@ -8,11 +8,10 @@ use crate::state::State;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Task {
-	// TODO: remove pub
-	pub(crate) state: Option<State>,
-	pub(crate) priority: Option<Priority>,
-	pub(crate) date_compound: Option<DateCompound>,
-	pub(crate) description: Description,
+	pub state: State,
+	pub priority: Option<Priority>,
+	pub date_compound: Option<DateCompound>,
+	pub description: Description,
 }
 
 impl Task {
@@ -20,8 +19,8 @@ impl Task {
 		Default::default()
 	}
 
-	pub const fn state(&self) -> Option<&State> {
-		self.state.as_ref()
+	pub const fn state(&self) -> &State {
+		&self.state
 	}
 
 	pub const fn priority(&self) -> Option<&Priority> {
@@ -41,8 +40,8 @@ impl fmt::Display for Task {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		let mut s: Vec<String> = Vec::with_capacity(4);
 
-		if let Some(state) = self.state {
-			s.push(state.to_string());
+		if self.state != State::Open {
+			s.push(self.state.to_string());
 		}
 
 		if let Some(priority) = self.priority {
@@ -65,27 +64,45 @@ impl From<&str> for Description {
 	}
 }
 
-// TODO: variants for description error, ...
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct TaskParseError;
+pub struct ParseTaskError;
 
-impl fmt::Display for TaskParseError {
+impl fmt::Display for ParseTaskError {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		f.write_str("failed to parse task")
 	}
 }
 
-impl std::error::Error for TaskParseError {}
+impl std::error::Error for ParseTaskError {}
 
 impl Parse for Task {
-	type Error = TaskParseError;
+	type Error = ParseTaskError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let state = State::parse_opt(parser);
-		let priority = Priority::parse_opt(parser);
-		let date_compound = DateCompound::parse_opt(parser);
+		macro_rules! try_parse {
+			( $parser:ident : $ty:ty ) => {{
+				let mut p_copy = *parser;
+
+				if let Some(ty) = <$ty>::parse_opt(&mut p_copy) {
+					if p_copy.is_eof() || p_copy.expect_whitespace().is_some()
+					{
+						*parser = p_copy;
+						Some(ty)
+					} else {
+						None
+					}
+				} else {
+					None
+				}
+			}};
+		}
+
+		let state = try_parse!(parser: State).unwrap_or_default();
+		let priority = try_parse!(parser: Priority);
+		let date_compound = try_parse!(parser: DateCompound);
+
 		let description =
-			Description::parse(parser).map_err(|_| TaskParseError)?;
+			Description::parse(parser).map_err(|_| ParseTaskError)?;
 
 		let task = Self { state, priority, date_compound, description };
 
@@ -94,7 +111,7 @@ impl Parse for Task {
 }
 
 impl std::str::FromStr for Task {
-	type Err = TaskParseError;
+	type Err = ParseTaskError;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
 		let mut parser = Parser::new(s.as_bytes());
@@ -142,7 +159,7 @@ impl TaskBuilder {
 		D: Into<Description>,
 	{
 		Task {
-			state: self.state,
+			state: self.state.unwrap_or_default(),
 			priority: self.priority,
 			date_compound: self.date_compound,
 			description: description.into(),

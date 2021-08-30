@@ -1,11 +1,8 @@
 use crate::span::BytePos;
 
-// TODO: make bytespans/pos
-
 pub trait Parse: Sized {
 	type Error: std::error::Error;
 
-	// TODO: some indication weather we reached EOF.
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error>;
 
 	fn parse_opt(parser: &mut Parser<'_>) -> Option<Self> {
@@ -21,6 +18,62 @@ pub trait Parse: Sized {
 	}
 }
 
+#[macro_export]
+macro_rules! parse_error {
+	( $name:ident : $ty:literal ) => {
+		#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
+		pub struct $name {
+			msg: Option<::std::borrow::Cow<'static, str>>,
+		}
+
+		impl $name {
+			pub fn with_msg<M: Into<::std::borrow::Cow<'static, str>>>(
+				msg: M,
+			) -> Self {
+				Self { msg: Some(msg.into()) }
+			}
+		}
+
+		impl ::std::fmt::Display for $name {
+			fn fmt(
+				&self,
+				f: &mut ::std::fmt::Formatter<'_>,
+			) -> ::std::fmt::Result {
+				if let Some(msg) = &self.msg {
+					write!(f, concat!("failed to parse ", $ty, ": {}"), msg)
+				} else {
+					f.write_str(concat!("failed to parse ", $ty))
+				}
+			}
+		}
+
+		impl ::std::error::Error for $name {}
+	};
+}
+
+#[macro_export]
+macro_rules! impl_fromstr {
+	( $ty:ty ) => {
+		impl ::std::str::FromStr for $ty {
+			type Err = <Self as Parse>::Error;
+
+			fn from_str(s: &str) -> ::std::result::Result<Self, Self::Err> {
+				let mut parser = Parser::new(s.as_bytes());
+
+				let tmp = <$ty>::parse(&mut parser)?;
+
+				if parser.is_eof() {
+					Ok(tmp)
+				} else {
+					Err(<Self as Parse>::Error::with_msg(
+						"more tokens in input",
+					))
+				}
+			}
+		}
+	};
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Parser<'a> {
 	cursor: Cursor<'a>,
@@ -29,6 +82,10 @@ pub struct Parser<'a> {
 impl<'a> Parser<'a> {
 	pub const fn new(bytes: &'a [u8]) -> Self {
 		Self { cursor: Cursor::new(bytes) }
+	}
+
+	pub const fn is_eof(&self) -> bool {
+		self.cursor.is_eof()
 	}
 
 	pub fn parse_u8(&mut self) -> Option<u8> {
@@ -91,6 +148,15 @@ impl<'a> Parser<'a> {
 		}
 	}
 
+	pub fn expect_whitespace(&mut self) -> Option<()> {
+		if matches!(self.cursor.first(), Some(x) if x.is_ascii_whitespace()) {
+			self.cursor.advance(1);
+			Some(())
+		} else {
+			None
+		}
+	}
+
 	pub fn expect_slice<S>(&mut self, expect: S) -> Option<&[u8]>
 	where
 		S: AsRef<[u8]>,
@@ -101,9 +167,8 @@ impl<'a> Parser<'a> {
 
 		if self.cursor.in_bounds(index_end) {
 			let slice = &self.cursor.bytes[self.cursor.index..=index_end];
-			let diff = slice.iter().zip(expect).find(|(a, b)| a != b);
 
-			if diff.is_none() {
+			if slice == expect {
 				self.cursor.advance(len);
 				Some(slice)
 			} else {
@@ -112,6 +177,10 @@ impl<'a> Parser<'a> {
 		} else {
 			None
 		}
+	}
+
+	pub const fn peek(&self) -> Option<u8> {
+		self.cursor.first()
 	}
 }
 

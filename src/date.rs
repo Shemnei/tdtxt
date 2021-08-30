@@ -1,31 +1,85 @@
 use std::fmt;
 
+#[cfg(feature = "chrono")]
 use chrono::prelude::*;
 
 use crate::parse::{Parse, Parser};
 
+#[cfg(not(feature = "chrono"))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SimpleDate {
+	year: i16,
+	month: u8,
+	day: u8,
+}
+
+#[cfg(not(feature = "chrono"))]
+impl SimpleDate {
+	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
+		assert!((1..=12).contains(&month), "month must be between 1-12");
+		assert!((1..=31).contains(&day), "day must be between 1-31");
+
+		Self { year, month, day }
+	}
+
+	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
+		if (1..=12).contains(&month) && (1..=31).contains(&day) {
+			Some(Self { year, month, day })
+		} else {
+			None
+		}
+	}
+}
+
+#[cfg(not(feature = "chrono"))]
+impl fmt::Display for SimpleDate {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "{:04}-{:02}-{:02}", &self.year, &self.month, &self.day)
+	}
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Date {
+	#[cfg(feature = "chrono")]
 	inner: chrono::Date<Local>,
+
+	#[cfg(not(feature = "chrono"))]
+	inner: SimpleDate,
 }
 
 impl Date {
+	#[cfg(feature = "chrono")]
 	const DATE_FORMAT: &'static str = "%Y-%m-%d";
 
-	pub fn ymd(year: i32, month: u32, day: u32) -> Self {
-		Self { inner: Local.ymd(year, month, day) }
+	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
+		#[cfg(feature = "chrono")]
+		{
+			Self { inner: Local.ymd(year as i32, month as u32, day as u32) }
+		}
+
+		#[cfg(not(feature = "chrono"))]
+		{
+			Self { inner: SimpleDate::ymd(year, month, day) }
+		}
 	}
 
-	pub fn ymd_opt(year: i32, month: u32, day: u32) -> Option<Self> {
-		let date = match Local.ymd_opt(year, month, day) {
-			// TODO: additional "real" error
-			chrono::LocalResult::None => return None,
-			x => x.unwrap(),
-		};
+	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
+		#[cfg(feature = "chrono")]
+		{
+			let date = Local
+				.ymd_opt(year as i32, month as u32, day as u32)
+				.earliest()?;
 
-		Some(Self { inner: date })
+			Some(Self { inner: date })
+		}
+
+		#[cfg(not(feature = "chrono"))]
+		{
+			Some(Self { inner: SimpleDate::ymd_opt(year, month, day)? })
+		}
 	}
 
+	#[cfg(feature = "chrono")]
 	pub fn today() -> Self {
 		Self { inner: Local::today() }
 	}
@@ -33,66 +87,51 @@ impl Date {
 
 impl fmt::Display for Date {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str(&self.inner.format(Self::DATE_FORMAT).to_string())
+		#[cfg(feature = "chrono")]
+		{
+			f.write_str(&self.inner.format(Self::DATE_FORMAT).to_string())
+		}
+
+		#[cfg(not(feature = "chrono"))]
+		{
+			fmt::Display::fmt(&self.inner, f)
+		}
 	}
 }
 
-impl From<(i32, u32, u32)> for Date {
-	fn from(value: (i32, u32, u32)) -> Self {
-		Self::ymd(value.0, value.1, value.2)
-	}
-}
-
-// TODO: impl TryFrom
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateParseError;
-
-impl fmt::Display for DateParseError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse date")
-	}
-}
-
-impl std::error::Error for DateParseError {}
+crate::parse_error!(ParseDateError: "date");
 
 impl Parse for Date {
-	type Error = DateParseError;
+	type Error = ParseDateError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let y1 = parser.parse_digit().ok_or(DateParseError)?;
-		let y2 = parser.parse_digit().ok_or(DateParseError)?;
-		let y3 = parser.parse_digit().ok_or(DateParseError)?;
-		let y4 = parser.parse_digit().ok_or(DateParseError)?;
-		let _ = parser.expect_u8(b'-').ok_or(DateParseError)?;
-		let m1 = parser.parse_digit().ok_or(DateParseError)?;
-		let m2 = parser.parse_digit().ok_or(DateParseError)?;
-		let _ = parser.expect_u8(b'-').ok_or(DateParseError)?;
-		let d1 = parser.parse_digit().ok_or(DateParseError)?;
-		let d2 = parser.parse_digit().ok_or(DateParseError)?;
-		let _ = parser.expect_u8(b' ').ok_or(DateParseError)?;
+		let y1 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let y2 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let y3 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let y4 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let _ = parser.expect_u8(b'-').ok_or_else(ParseDateError::default)?;
+		let m1 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let m2 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let _ = parser.expect_u8(b'-').ok_or_else(ParseDateError::default)?;
+		let d1 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
+		let d2 = parser.parse_digit().ok_or_else(ParseDateError::default)?;
 
-		let year = (y1 as i32 * 1000)
-			+ (y2 as i32 * 100)
-			+ (y3 as i32 * 10)
-			+ y4 as i32;
-		let month = (m1 as u32 * 10) + m2 as u32;
-		let day = (d1 as u32 * 10) + d2 as u32;
+		let year = (y1 as i16 * 1000)
+			+ (y2 as i16 * 100)
+			+ (y3 as i16 * 10)
+			+ y4 as i16;
+		let month = (m1 * 10) + m2;
+		let day = (d1 * 10) + d2;
 
-		let date = match Local.ymd_opt(year, month, day) {
-			// TODO: additional "real" error
-			chrono::LocalResult::None => return Err(DateParseError),
-			x => x.unwrap(),
-		};
-
-		Ok(Self { inner: date })
+		Self::ymd_opt(year, month, day).ok_or_else(ParseDateError::default)
 	}
 }
+
+crate::impl_fromstr!(Date);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateCompound {
 	Created { created: Date },
-	// TODO: assert created <= completed
 	Completed { created: Date, completed: Date },
 }
 
@@ -146,29 +185,37 @@ where
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DateCompoundParseError;
-
-impl fmt::Display for DateCompoundParseError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		f.write_str("failed to parse date compound")
-	}
-}
-
-impl std::error::Error for DateCompoundParseError {}
+crate::parse_error!(ParseDateCompoundError: "date compound");
 
 impl Parse for DateCompound {
-	type Error = DateCompoundParseError;
+	type Error = ParseDateCompoundError;
 
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error> {
-		let date1 = Date::parse_opt(parser).ok_or(DateCompoundParseError)?;
-		let compound = match Date::parse_opt(parser) {
-			Some(date2) => {
-				Self::Completed { created: date2, completed: date1 }
-			}
-			None => Self::Created { created: date1 },
-		};
+		let date1 = Date::parse_opt(parser)
+			.ok_or_else(ParseDateCompoundError::default)?;
 
-		Ok(compound)
+		let mut p_copy = *parser;
+
+		if p_copy.expect_whitespace().is_some() {
+			if let Some(date2) = Date::parse_opt(&mut p_copy) {
+				// Check if eof or white space; if not it is a single date
+				if p_copy
+					.peek()
+					.map(|c| c.is_ascii_whitespace())
+					.unwrap_or(true)
+				{
+					*parser = p_copy;
+
+					return Ok(Self::Completed {
+						created: date2,
+						completed: date1,
+					});
+				}
+			}
+		}
+
+		Ok(Self::Created { created: date1 })
 	}
 }
+
+crate::impl_fromstr!(DateCompound);
