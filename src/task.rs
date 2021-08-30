@@ -64,7 +64,6 @@ impl From<&str> for Description {
 	}
 }
 
-// TODO: variants for description error, ...
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ParseTaskError;
 
