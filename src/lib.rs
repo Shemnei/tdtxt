@@ -699,6 +699,54 @@ x Download Todo.txt mobile app @Phone";
 	}
 
 	#[test]
+	fn parse_git_example() {
+		use std::str::FromStr;
+
+		let input = "x (A) 2016-05-20 2016-04-30 measure space for \
+		             +chapelShelving @chapel due:2016-05-30";
+
+		let task_is = Task::from_str(input);
+
+		let task_should = Task::build()
+			.state(State::Done)
+			.priority(Priority::A)
+			.date_compound(DateCompound::completed(
+				Date::ymd(2016, 4, 30),
+				Date::ymd(2016, 5, 20),
+			))
+			.build("measure space for +chapelShelving @chapel due:2016-05-30");
+
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
+		assert_eq!(
+			task_is.to_string().as_bytes(),
+			b"x (A) 2016-05-20 2016-04-30 measure space for \
+		             +chapelShelving @chapel due:2016-05-30"
+		);
+		let projects_should: Vec<&str> = vec!["chapelShelving"];
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
+		let contexts_should: Vec<&str> = vec!["chapel"];
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
+		let custom_should: Vec<(&str, &str)> = vec![("due", "2016-05-30")];
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
+
+		assert_eq!(
+			Date::from_str(task_is.description().custom().next().unwrap().1)
+				.unwrap(),
+			Date::ymd_opt(2016, 5, 30).unwrap()
+		);
+	}
+
+	#[test]
 	fn priority_ord() {
 		assert!(Priority::A > Priority::B);
 		assert!(Priority::A == Priority::A);
