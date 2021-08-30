@@ -3,7 +3,6 @@ use crate::span::BytePos;
 pub trait Parse: Sized {
 	type Error: std::error::Error;
 
-	// TODO: some indication weather we reached EOF.
 	fn parse(parser: &mut Parser<'_>) -> Result<Self, Self::Error>;
 
 	fn parse_opt(parser: &mut Parser<'_>) -> Option<Self> {

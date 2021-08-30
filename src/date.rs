@@ -68,7 +68,6 @@ impl Date {
 		{
 			let date =
 				match Local.ymd_opt(year as i32, month as u32, day as u32) {
-					// TODO: additional "real" error
 					chrono::LocalResult::None => return None,
 					x => x.unwrap(),
 				};
@@ -135,7 +134,6 @@ crate::impl_fromstr!(Date);
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateCompound {
 	Created { created: Date },
-	// TODO: assert created <= completed
 	Completed { created: Date, completed: Date },
 }
 
