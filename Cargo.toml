@@ -11,13 +11,21 @@ license= "Unlicense"
 exclude = ["/Makefile", "/.git/", "/.github/"]
 keywords = ["todotxt", "todo", "todo-txt", "parser"]
 
-[dependencies]
-chrono = { version = "0.4.19", optional = true }
-serde = { version = "1.0.117", features = ["derive"], optional = true }
+[[bench]]
+name = "parse_single"
+harness = false
 
 [features]
 default = []
 all = ["chrono", "serde"]
+
+[dependencies]
+chrono = { version = "0.4.19", optional = true }
+serde = { version = "1.0.117", features = ["derive"], optional = true }
+
+[dev-dependencies]
+criterion = "0.3.5"
+pretty_assertions = "0.7.2"
 
 [profile.dev]
 opt-level = 0
@@ -27,6 +35,3 @@ lto = "thin"
 opt-level = 3
 # Reduces parallel code generation units to increase optimizations
 codegen-units = 1
-
-[dev-dependencies]
-pretty_assertions = "0.7.2"
