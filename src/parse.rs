@@ -22,6 +22,7 @@ pub trait Parse: Sized {
 ///
 /// An optional message can be associated with the generated error type when
 /// instantiated with `Self::with_msg`.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! parse_error {
 	( $name:ident : $ty:literal ) => {
@@ -76,6 +77,7 @@ macro_rules! parse_error {
 /// implement a function with the following signature `fn with_msg(&str) ->
 /// Self`. If the macro [`parse_error`] is used, this function will be
 /// implemented automatically.
+#[doc(hidden)]
 #[macro_export]
 macro_rules! impl_fromstr {
 	( $ty:ty ) => {

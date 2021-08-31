@@ -80,9 +80,12 @@ impl Date {
 	///
 	/// # Panics
 	///
-	/// For more information see the relevant backing implementation:
-	#[cfg_attr(feature = "chrono", doc = " [`chrono::Local::ymd`]")]
-	#[cfg_attr(not(feature = "chrono"), doc = " [`SimpleDate::ymd`]")]
+	/// Can panic if the date is invalid.
+	#[cfg_attr(
+		feature = "chrono",
+		doc = "For more information see the relevant backing \
+		       implementation:[`chrono::Local::ymd`]"
+	)]
 	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
 		#[cfg(feature = "chrono")]
 		{
@@ -97,12 +100,12 @@ impl Date {
 
 	/// Creates a new date. Returns `None` when the date creation would have
 	/// failed.
-	///
-	/// # Notes
-	///
-	/// For more information see the relevant backing implementation:
-	#[cfg_attr(feature = "chrono", doc = " [`chrono::Local::ymd_opt`]")]
-	#[cfg_attr(not(feature = "chrono"), doc = " [`SimpleDate::ymd_opt`]")]
+	#[cfg_attr(
+		feature = "chrono",
+		doc = "\n# Notes\nFor more information see the relevant backing \
+		       implementation:[`chrono::Local::ymd_opt`]
+	"
+	)]
 	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		#[cfg(feature = "chrono")]
 		{
