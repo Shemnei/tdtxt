@@ -60,3 +60,27 @@ assert_eq!(task.description().projects().collect::<Vec<_>>(), vec!["chapelShelvi
 assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
 assert_eq!(task.description().custom().collect::<Vec<_>>(), vec![("due", "2016-05-30")]);
 ```
+
+## Features
+
+### Serde (`serde`)
+
+Serialize and deserialize the Task struct with serde.
+
+#### Examples
+
+```rust
+use tdtxt::{Task, Date, State, Priority, DateCompound};
+
+let task_should = Task::build()
+    .state(State::Done)
+    .priority(Priority::A)
+    .date_compound(DateCompound::completed(
+        Date::ymd(2016, 4, 30),
+        Date::ymd(2016, 5, 20),
+    ))
+    .build("measure space for +chapelShelving @chapel due:2016-05-30");
+
+let json = serde_json::to_string_pretty(&task_should).unwrap();
+println!("{}", &json);
+```

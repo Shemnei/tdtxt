@@ -216,7 +216,11 @@ impl<'de> serde::de::Deserialize<'de> for Date {
 ///
 /// The dates must be given in the format `yyyy-mm-dd`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize), serde(untagged))]
+#[cfg_attr(
+	feature = "serde",
+	derive(serde::Serialize, serde::Deserialize),
+	serde(untagged)
+)]
 pub enum DateCompound {
 	/// Two dates, a completion date and a creation date.
 	Completed {

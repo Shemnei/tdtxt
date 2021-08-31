@@ -25,7 +25,7 @@ clippy:
 	cargo clippy --all --features "all" -- -Dwarnings
 
 checkfmt:
-	cargo fmt --all --features "all" -- --check
+	cargo fmt --all -- --check
 
 lint: checkfmt clippy
 
