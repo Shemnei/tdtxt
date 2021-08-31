@@ -16,16 +16,16 @@ buildr:
 build: buildr
 
 check:
-	cargo check --all
+	cargo check --all --features "all"
 
 test:
-	cargo test --all
+	cargo test --all --features "all"
 
 clippy:
-	cargo clippy --all -- -Dwarnings
+	cargo clippy --all --features "all" -- -Dwarnings
 
 checkfmt:
-	cargo fmt --all -- --check
+	cargo fmt --all --features "all" -- --check
 
 lint: checkfmt clippy
 
@@ -39,13 +39,13 @@ install:
 	cargo install --path $(ROOT_DIR)
 
 doc:
-	cargo doc --all --document-private-items
+	cargo doc --all --features "all" --document-private-items
 
 bench:
-	cargo bench --all
+	cargo bench --all --features "all"
 
 bencho:
-	cargo bench --all
+	cargo bench --all --features "all"
 	xdg-open target/criterion/report/index.html
 
 # utility
