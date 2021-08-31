@@ -10,7 +10,7 @@ macro_rules! priorities {
 			$name:ident : $char:literal $( = $idx:literal )? ,
 		)+
 	) => {
-		/// Represents the priority a task can have.
+		/// Represents the priority a [`Task`](`crate::Task`) can have.
 		///
 		/// # Notes
 		///
