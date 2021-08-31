@@ -10,6 +10,13 @@ macro_rules! priorities {
 			$name:ident : $char:literal $( = $idx:literal )? ,
 		)+
 	) => {
+		/// Represents the priority a task can have.
+		///
+		/// # Notes
+		///
+		/// [`Priority::A`] has the lowest integer code but is considered to be
+		/// the highest priority there is. [`Priority::Z`] is the lowest
+		/// priority.
 		#[repr(u8)]
 		#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 		pub enum Priority {
@@ -52,31 +59,57 @@ macro_rules! priorities {
 }
 
 priorities! {
+	/// Priority `A`. Highest priority.
 	A : 'A' = 0,
+	/// Priority `B`.
 	B : 'B',
+	/// Priority `C`.
 	C : 'C',
+	/// Priority `D`.
 	D : 'D',
+	/// Priority `E`.
 	E : 'E',
+	/// Priority `F`.
 	F : 'F',
+	/// Priority `G`.
 	G : 'G',
+	/// Priority `H`.
 	H : 'H',
+	/// Priority `I`.
 	I : 'I',
+	/// Priority `J`.
 	J : 'J',
+	/// Priority `K`.
 	K : 'K',
+	/// Priority `L`.
 	L : 'L',
+	/// Priority `M`.
 	M : 'M',
+	/// Priority `N`.
 	N : 'N',
+	/// Priority `O`.
 	O : 'O',
+	/// Priority `P`.
 	P : 'P',
+	/// Priority `Q`.
 	Q : 'Q',
+	/// Priority `R`.
 	R : 'R',
+	/// Priority `S`.
 	S : 'S',
+	/// Priority `T`.
 	T : 'T',
+	/// Priority `U`.
 	U : 'U',
+	/// Priority `V`.
 	V : 'V',
+	/// Priority `W`.
 	W : 'W',
+	/// Priority `X`.
 	X : 'X',
+	/// Priority `Y`.
 	Y : 'Y',
+	/// Priority `Z`. Lowest priority.
 	Z : 'Z',
 }
 
