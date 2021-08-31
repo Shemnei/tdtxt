@@ -18,19 +18,35 @@ pub trait Parse: Sized {
 	}
 }
 
+/// Generates a basic generic error type for use in parsing.
+///
+/// An optional message can be associated with the generated error type when
+/// instantiated with `Self::with_msg`.
 #[macro_export]
 macro_rules! parse_error {
 	( $name:ident : $ty:literal ) => {
+		#[doc = concat!("A generic error which can occur during parsing of a ", $ty, ".")]
 		#[derive(Default, Debug, Clone, PartialEq, Eq, Hash)]
 		pub struct $name {
-			msg: Option<::std::borrow::Cow<'static, str>>,
+			/// Optional attached message/description.
+			///
+			/// This can be used for a more detailed description of what went
+			/// wrong.
+			msg: ::std::option::Option<::std::borrow::Cow<'static, str>>,
 		}
 
 		impl $name {
-			pub fn with_msg<M: Into<::std::borrow::Cow<'static, str>>>(
+			/// Creates a new instance and associates `msg` with it.
+			///
+			/// # Examples
+			///
+			/// ```rust,ignore
+			#[doc = concat!(" let error: ", stringify!($name), " = ", stringify!($name), r#"::with_msg("detailed message");"#)]
+			/// ```
+			fn with_msg<M: ::std::convert::Into<::std::borrow::Cow<'static, str>>>(
 				msg: M,
 			) -> Self {
-				Self { msg: Some(msg.into()) }
+				Self { msg: ::std::option::Option::Some(msg.into()) }
 			}
 		}
 
@@ -39,7 +55,7 @@ macro_rules! parse_error {
 				&self,
 				f: &mut ::std::fmt::Formatter<'_>,
 			) -> ::std::fmt::Result {
-				if let Some(msg) = &self.msg {
+				if let ::std::option::Option::Some(msg) = &self.msg {
 					write!(f, concat!("failed to parse ", $ty, ": {}"), msg)
 				} else {
 					f.write_str(concat!("failed to parse ", $ty))
@@ -51,6 +67,15 @@ macro_rules! parse_error {
 	};
 }
 
+/// Implements [`std::str::FromStr`] for a type which implements
+/// [`Parse`](`crate::parse::Parse`).
+///
+/// # Notes
+///
+/// For this to work, [`Parse::Error`](`crate::parse::Parse::Error`) must
+/// implement a function with the following signature `fn with_msg(&str) ->
+/// Self`. If the macro [`parse_error`] is used, this function will be
+/// implemented automatically.
 #[macro_export]
 macro_rules! impl_fromstr {
 	( $ty:ty ) => {
