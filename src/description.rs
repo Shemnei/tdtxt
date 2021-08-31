@@ -87,15 +87,29 @@ impl CustomRange {
 	}
 }
 
+/// Represents the description part of a [`Task`](`crate::Task`).
+///
+/// Components like projects, contexts and custom tags are all implemented as
+/// byte range indices into the raw description text. This is done to avoid
+/// unnecessary allocations which in turn reduces the memory footprint.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Description {
+	/// The whole text of the description.
 	raw: String,
+	/// Byte indices into [`Self::raw`] representing projects (e.g. `+project`);
 	projects: Vec<ProjectRange>,
+	/// Byte indices into [`Self::raw`] representing contexts (e.g. `@context`);
 	contexts: Vec<ContextRange>,
+	/// Byte indices into [`Self::raw`] representing custom tags (e.g.
+	/// `key:value`);
 	custom: Vec<CustomRange>,
 }
 
 impl Description {
+	/// Creates a new description from `s`.
+	///
+	/// During this process all projects, contexts and custom tags will be
+	/// located.
 	pub fn new<S>(s: S) -> Self
 	where
 		S: ToString,
@@ -106,18 +120,22 @@ impl Description {
 		Self { raw, projects, contexts, custom }
 	}
 
+	/// Returns the text of the whole description.
 	pub fn description(&self) -> &str {
 		&self.raw
 	}
 
+	/// Returns an iterator of all projects found within the description.
 	pub fn projects(&self) -> ProjectIter<'_> {
 		ProjectIter::new(self)
 	}
 
+	/// Returns an iterator of all contexts found within the description.
 	pub fn contexts(&self) -> ContextIter<'_> {
 		ContextIter::new(self)
 	}
 
+	/// Returns an iterator of all custom tags found within the description.
 	pub fn custom(&self) -> CustomIter<'_> {
 		CustomIter::new(self)
 	}
