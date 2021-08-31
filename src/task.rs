@@ -6,31 +6,41 @@ use crate::parse::{Parse, Parser};
 use crate::priority::Priority;
 use crate::state::State;
 
+/// Represents the whole task.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Task {
+	/// Optional state of the task.
 	pub state: State,
+	/// Optional priority of the task.
 	pub priority: Option<Priority>,
+	/// Optional associated special dates for the task.
 	pub date_compound: Option<DateCompound>,
+	/// Description of the task.
 	pub description: Description,
 }
 
 impl Task {
+	/// Creates a new builder for a task.
 	pub fn build() -> TaskBuilder {
 		Default::default()
 	}
 
+	/// Returns the state of the task.
 	pub const fn state(&self) -> &State {
 		&self.state
 	}
 
+	/// Returns the priority of the task.
 	pub const fn priority(&self) -> Option<&Priority> {
 		self.priority.as_ref()
 	}
 
+	/// Returns the date compound of the task.
 	pub const fn date_compound(&self) -> Option<&DateCompound> {
 		self.date_compound.as_ref()
 	}
 
+	/// Returns the description of the task.
 	pub const fn description(&self) -> &Description {
 		&self.description
 	}
@@ -119,6 +129,10 @@ impl std::str::FromStr for Task {
 	}
 }
 
+/// A builder for a task.
+///
+/// All components implement `Copy`, meaning the builder can be used to build
+/// multiple tasks without being consumed.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TaskBuilder {
 	state: Option<State>,
@@ -127,17 +141,20 @@ pub struct TaskBuilder {
 }
 
 impl TaskBuilder {
+	/// Creates a new instance of the builder.
 	pub fn new() -> Self {
 		let (state, priority, date_compound) = <_>::default();
 
 		Self { state, priority, date_compound }
 	}
 
+	/// Sets the state for the task.
 	pub fn state(&mut self, state: State) -> &mut Self {
 		self.state = Some(state);
 		self
 	}
 
+	/// Sets the priority for the task.
 	pub fn priority<P>(&mut self, priority: P) -> &mut Self
 	where
 		P: Into<Priority>,
@@ -146,6 +163,7 @@ impl TaskBuilder {
 		self
 	}
 
+	/// Sets the date compound for the task.
 	pub fn date_compound<D>(&mut self, date_compound: D) -> &mut Self
 	where
 		D: Into<DateCompound>,
@@ -154,6 +172,11 @@ impl TaskBuilder {
 		self
 	}
 
+	/// Creates a task from the builder.
+	///
+	/// # Notes
+	///
+	/// If no priority was set it will use the default implementation for it.
 	pub fn build<D>(&mut self, description: D) -> Task
 	where
 		D: Into<Description>,
