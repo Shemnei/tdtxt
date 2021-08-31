@@ -84,7 +84,7 @@ pub use crate::date::{Date, DateCompound};
 pub use crate::description::Description;
 pub use crate::priority::Priority;
 pub use crate::state::State;
-pub use crate::task::Task;
+pub use crate::task::{Task, TaskBuilder};
 
 pub mod prelude {
 	//! The prelude exports all components needed for regular use.
@@ -99,7 +99,7 @@ pub mod prelude {
 	pub use crate::description::Description;
 	pub use crate::priority::Priority;
 	pub use crate::state::State;
-	pub use crate::task::Task;
+	pub use crate::task::{Task, TaskBuilder};
 }
 
 #[cfg(test)]
