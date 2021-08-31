@@ -87,6 +87,14 @@ pub use crate::state::State;
 pub use crate::task::Task;
 
 pub mod prelude {
+	//! The prelude exports all components needed for regular use.
+	//!
+	//! # Examples
+	//!
+	//! ```rust
+	//! use tdtxt::prelude::*;
+	//! ```
+
 	pub use crate::date::{Date, DateCompound};
 	pub use crate::description::Description;
 	pub use crate::priority::Priority;
