@@ -84,3 +84,19 @@ let task_should = Task::build()
 let json = serde_json::to_string_pretty(&task_should).unwrap();
 println!("{}", &json);
 ```
+
+Example json output:
+
+```json
+{
+  "state": "Done",
+  "priority": "A",
+  "created": "2016-04-30",
+  "completed": "2016-05-20",
+  "description": "measure space for +chapelShelving @chapel due:2016-05-30"
+}
+```
+
+**NOTE**
+
+The order in which `created` and `completed` appear matters.
