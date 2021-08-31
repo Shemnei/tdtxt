@@ -8,6 +8,7 @@ use crate::state::State;
 
 /// Represents the whole task.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Task {
 	/// Optional state of the task.
 	pub state: State,

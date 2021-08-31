@@ -324,3 +324,42 @@ macro_rules! simple_iter {
 simple_iter!(ProjectIter => ProjectRange, projects, &'a str);
 simple_iter!(ContextIter => ContextRange, contexts, &'a str);
 simple_iter!(CustomIter => CustomRange, custom, (&'a str, &'a str));
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for Description {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		serializer.serialize_str(&self.raw)
+	}
+}
+
+#[cfg(feature = "serde")]
+struct DescriptionVisitor;
+
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Visitor<'de> for DescriptionVisitor {
+	type Value = Description;
+
+	fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+		formatter.write_str("a description")
+	}
+
+	fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+	where
+		E: serde::de::Error,
+	{
+		std::str::FromStr::from_str(v).map_err(serde::de::Error::custom)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Deserialize<'de> for Description {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		deserializer.deserialize_str(DescriptionVisitor)
+	}
+}

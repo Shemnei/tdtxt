@@ -173,10 +173,50 @@ impl Parse for Date {
 
 crate::impl_fromstr!(Date);
 
+#[cfg(feature = "serde")]
+impl serde::Serialize for Date {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		serializer.serialize_str(&self.to_string())
+	}
+}
+
+#[cfg(feature = "serde")]
+struct DateVisitor;
+
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Visitor<'de> for DateVisitor {
+	type Value = Date;
+
+	fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+		formatter.write_str("a date with the format of 'yyyy-mm-dd'")
+	}
+
+	fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+	where
+		E: serde::de::Error,
+	{
+		std::str::FromStr::from_str(v).map_err(serde::de::Error::custom)
+	}
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Deserialize<'de> for Date {
+	fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+	where
+		D: serde::Deserializer<'de>,
+	{
+		deserializer.deserialize_str(DateVisitor)
+	}
+}
+
 /// Represents the attached dates a [`Task`](`crate::Task`) can have.
 ///
 /// The dates must be given in the format `yyyy-mm-dd`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DateCompound {
 	/// A single date on which the task was created.
 	Created {

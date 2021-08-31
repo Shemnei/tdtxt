@@ -19,6 +19,7 @@ macro_rules! priorities {
 		/// priority.
 		#[repr(u8)]
 		#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+		#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 		pub enum Priority {
 			$(
 				$( #[doc = $doc] )*
