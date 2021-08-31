@@ -109,6 +109,8 @@ pub mod prelude {
 
 #[cfg(test)]
 mod tests {
+	use std::str::FromStr as _;
+
 	use pretty_assertions::assert_eq;
 
 	use crate::date::{Date, DateCompound};
@@ -117,6 +119,25 @@ mod tests {
 	use crate::priority::Priority;
 	use crate::state::State;
 	use crate::task::{ParseTaskError, Task};
+
+	#[cfg(feature = "serde")]
+	#[test]
+	fn serde() {
+		let task_should = Task::build()
+			.state(State::Done)
+			.priority(Priority::A)
+			.date_compound(DateCompound::completed(
+				Date::ymd(2016, 4, 30),
+				Date::ymd(2016, 5, 20),
+			))
+			.build("measure space for +chapelShelving @chapel due:2016-05-30");
+
+		let json = serde_json::to_string_pretty(&task_should).unwrap();
+		println!("{}", &json);
+		let task_in: Task = serde_json::from_str(&json).unwrap();
+
+		assert_eq!(task_in, task_should);
+	}
 
 	#[test]
 	fn task_display() {
@@ -709,8 +730,6 @@ x Download Todo.txt mobile app @Phone";
 
 	#[test]
 	fn parse_git_example() {
-		use std::str::FromStr;
-
 		let input = "x (A) 2016-05-20 2016-04-30 measure space for \
 		             +chapelShelving @chapel due:2016-05-30";
 
