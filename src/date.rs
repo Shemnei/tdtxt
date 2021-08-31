@@ -5,16 +5,28 @@ use chrono::prelude::*;
 
 use crate::parse::{Parse, Parser};
 
+/// A very basic date type used when feature `chrono` is not active.
 #[cfg(not(feature = "chrono"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimpleDate {
+	/// Year of the date.
 	year: i16,
+	/// One-indexed month of the date.
 	month: u8,
+	/// One-indexed day of the date.
 	day: u8,
 }
 
 #[cfg(not(feature = "chrono"))]
 impl SimpleDate {
+	/// Creates a new date.
+	///
+	/// # Panics
+	///
+	/// Can panic if the month/day are not within the limits.
+	///
+	/// - Month: 1-12
+	/// - Day:   1-31
 	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
 		assert!((1..=12).contains(&month), "month must be between 1-12");
 		assert!((1..=31).contains(&day), "day must be between 1-31");
@@ -22,6 +34,10 @@ impl SimpleDate {
 		Self { year, month, day }
 	}
 
+	/// Creates a new date. Will return `None` if the date creation would have
+	/// failed.
+	///
+	/// For more information about what could fail see: [`Self::ymd`].
 	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		if (1..=12).contains(&month) && (1..=31).contains(&day) {
 			Some(Self { year, month, day })
@@ -38,19 +54,35 @@ impl fmt::Display for SimpleDate {
 	}
 }
 
+/// A simple date structure, which represents the date in the format
+/// `yyyy-mm-dd`.
+///
+/// # Notes
+///
+/// The inner/backing type is depended on the feature `chrono`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Date {
+	/// Inner backing type.
 	#[cfg(feature = "chrono")]
 	inner: chrono::Date<Local>,
 
+	/// Inner backing type.
 	#[cfg(not(feature = "chrono"))]
 	inner: SimpleDate,
 }
 
 impl Date {
+	/// The format for printing the date when feature `chrono` is active.
 	#[cfg(feature = "chrono")]
 	const DATE_FORMAT: &'static str = "%Y-%m-%d";
 
+	/// Creates a new date.
+	///
+	/// # Panics
+	///
+	/// For more information see the relevant backing implementation:
+	#[cfg_attr(feature = "chrono", doc = " [`chrono::Local::ymd`]")]
+	#[cfg_attr(not(feature = "chrono"), doc = " [`SimpleDate::ymd`]")]
 	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
 		#[cfg(feature = "chrono")]
 		{
@@ -63,6 +95,14 @@ impl Date {
 		}
 	}
 
+	/// Creates a new date. Returns `None` when the date creation would have
+	/// failed.
+	///
+	/// # Notes
+	///
+	/// For more information see the relevant backing implementation:
+	#[cfg_attr(feature = "chrono", doc = " [`chrono::Local::ymd_opt`]")]
+	#[cfg_attr(not(feature = "chrono"), doc = " [`SimpleDate::ymd_opt`]")]
 	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		#[cfg(feature = "chrono")]
 		{
@@ -79,6 +119,7 @@ impl Date {
 		}
 	}
 
+	/// Returns a `Date` which corresponds to the current date.
 	#[cfg(feature = "chrono")]
 	pub fn today() -> Self {
 		Self { inner: Local::today() }
@@ -129,13 +170,28 @@ impl Parse for Date {
 
 crate::impl_fromstr!(Date);
 
+/// Represents the attached dates a [`Task`](`crate::Task`) can have.
+///
+/// The dates must be given in the format `yyyy-mm-dd`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum DateCompound {
-	Created { created: Date },
-	Completed { created: Date, completed: Date },
+	/// A single date on which the task was created.
+	Created {
+		/// Creation date.
+		created: Date,
+	},
+	/// Two dates, a completion date and a creation date.
+	Completed {
+		/// Creation date.
+		created: Date,
+		/// Completion date.
+		completed: Date,
+	},
 }
 
 impl DateCompound {
+	/// Creates a new date compound for a single created date
+	/// ([`DateCompound::Created`]).
 	pub fn created<A>(created: A) -> Self
 	where
 		A: Into<Date>,
@@ -143,6 +199,8 @@ impl DateCompound {
 		Self::Created { created: created.into() }
 	}
 
+	/// Creates a new date compound for a created and completion date
+	/// ([`DateCompound::Completed`]).
 	pub fn completed<A, B>(created: A, completed: B) -> Self
 	where
 		A: Into<Date>,
