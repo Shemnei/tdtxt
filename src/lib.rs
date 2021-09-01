@@ -15,7 +15,7 @@
 //!
 //! assert_eq!(task.state(), &State::Done);
 //! assert_eq!(task.priority(), Some(&Priority::A));
-//! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
+//! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::from_ymd(2016, 4, 30), completed: Date::from_ymd(2016, 5, 20) }));
 //! assert_eq!(task.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
 //! assert_eq!(task.description().projects().collect::<Vec<_>>(), vec!["chapelShelving"]);
 //! assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
@@ -31,14 +31,14 @@
 //! let task = Task::build()
 //!     .state(State::Done)
 //!     .priority(Priority::A)
-//!     .date_compound(DateCompound::completed(Date::ymd(2016, 4, 30), Date::ymd(2016, 5, 20)))
+//!     .date_compound(DateCompound::completed(Date::from_ymd(2016, 4, 30), Date::from_ymd(2016, 5, 20)))
 //!     .build("measure space for +chapelShelving @chapel due:2016-05-30");
 //!
 //! assert_eq!(format!("{}", task), line);
 //!
 //! assert_eq!(task.state(), &State::Done);
 //! assert_eq!(task.priority(), Some(&Priority::A));
-//! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::ymd(2016, 4, 30), completed: Date::ymd(2016, 5, 20) }));
+//! assert_eq!(task.date_compound(), Some(&DateCompound::Completed { created: Date::from_ymd(2016, 4, 30), completed: Date::from_ymd(2016, 5, 20) }));
 //! assert_eq!(task.description().description(), "measure space for +chapelShelving @chapel due:2016-05-30");
 //! assert_eq!(task.description().projects().collect::<Vec<_>>(), vec!["chapelShelving"]);
 //! assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
@@ -60,8 +60,8 @@
 //!     .state(State::Done)
 //!     .priority(Priority::A)
 //!     .date_compound(DateCompound::completed(
-//!         Date::ymd(2016, 4, 30),
-//!         Date::ymd(2016, 5, 20),
+//!         Date::from_ymd(2016, 4, 30),
+//!         Date::from_ymd(2016, 5, 20),
 //!     ))
 //!     .build("measure space for +chapelShelving @chapel due:2016-05-30");
 //!
@@ -150,8 +150,8 @@ mod tests {
 			.state(State::Done)
 			.priority(Priority::A)
 			.date_compound(DateCompound::completed(
-				Date::ymd(2016, 4, 30),
-				Date::ymd(2016, 5, 20),
+				Date::from_ymd(2016, 4, 30),
+				Date::from_ymd(2016, 5, 20),
 			))
 			.build("measure space for +chapelShelving @chapel due:2016-05-30");
 
@@ -188,20 +188,21 @@ mod tests {
 		let input = b"2020-01-01";
 		let mut parser = Parser::new(input);
 
-		assert_eq!(Date::parse(&mut parser), Ok(Date::ymd(2020, 01, 01)));
+		assert_eq!(Date::parse(&mut parser), Ok(Date::from_ymd(2020, 01, 01)));
 
 		let input = b"1234-07-16";
 		let mut parser = Parser::new(input);
 
-		let d = DateCompound::Created { created: Date::ymd(1234, 07, 16) };
+		let d =
+			DateCompound::Created { created: Date::from_ymd(1234, 07, 16) };
 		assert_eq!(DateCompound::parse(&mut parser), Ok(d));
 
 		let input = b"2000-01-01 1970-01-01";
 		let mut parser = Parser::new(input);
 
 		let d = DateCompound::Completed {
-			created: Date::ymd(1970, 01, 01),
-			completed: Date::ymd(2000, 01, 01),
+			created: Date::from_ymd(1970, 01, 01),
+			completed: Date::from_ymd(2000, 01, 01),
 		};
 		assert_eq!(DateCompound::parse(&mut parser), Ok(d));
 
@@ -232,7 +233,7 @@ mod tests {
 			state: State::Done,
 			priority: Some(Priority::Z),
 			date_compound: Some(DateCompound::Created {
-				created: Date::ymd(2020, 01, 01),
+				created: Date::from_ymd(2020, 01, 01),
 			}),
 			description: Description::new("Hello World"),
 		};
@@ -304,7 +305,7 @@ Post signs around the neighborhood +GarageSale
 
 		let task = Task::build()
 			.date_compound(DateCompound::Created {
-				created: Date::ymd(2011, 03, 02),
+				created: Date::from_ymd(2011, 03, 02),
 			})
 			.build("Document +TodoTxt task format");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
@@ -312,7 +313,7 @@ Post signs around the neighborhood +GarageSale
 		let task = Task::build()
 			.priority(Priority::A)
 			.date_compound(DateCompound::Created {
-				created: Date::ymd(2011, 03, 02),
+				created: Date::from_ymd(2011, 03, 02),
 			})
 			.build("Call Mom");
 		assert_eq!(Task::parse(&mut parser), Ok(task));
@@ -421,8 +422,8 @@ Post signs around the neighborhood +GarageSale
 			.state(State::Done)
 			.priority(Priority::J)
 			.date_compound(DateCompound::Completed {
-				created: Date::ymd(1980, 01, 01),
-				completed: Date::ymd(1990, 01, 01),
+				created: Date::from_ymd(1980, 01, 01),
+				completed: Date::from_ymd(1990, 01, 01),
 			})
 			.build("Wait ten year @home for +century_waiting author:me");
 		let task_is = Task::parse(&mut parser);
@@ -761,8 +762,8 @@ x Download Todo.txt mobile app @Phone";
 			.state(State::Done)
 			.priority(Priority::A)
 			.date_compound(DateCompound::completed(
-				Date::ymd(2016, 4, 30),
-				Date::ymd(2016, 5, 20),
+				Date::from_ymd(2016, 4, 30),
+				Date::from_ymd(2016, 5, 20),
 			))
 			.build("measure space for +chapelShelving @chapel due:2016-05-30");
 
@@ -792,7 +793,7 @@ x Download Todo.txt mobile app @Phone";
 		assert_eq!(
 			Date::from_str(task_is.description().custom().next().unwrap().1)
 				.unwrap(),
-			Date::ymd_opt(2016, 5, 30).unwrap()
+			Date::from_ymd_opt(2016, 5, 30).unwrap()
 		);
 	}
 
@@ -805,7 +806,7 @@ x Download Todo.txt mobile app @Phone";
 
 		let task_should = Task::build()
 			.state(State::Done)
-			.date_compound(DateCompound::created(Date::ymd(2016, 4, 30)))
+			.date_compound(DateCompound::created(Date::from_ymd(2016, 4, 30)))
 			.build(
 				"clean the room \u{1F614} +studying \
 				 @\u{1F9D1}\u{200D}\u{1F3EB} emoji:\u{1F600}",

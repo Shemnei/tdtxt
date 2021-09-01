@@ -16,12 +16,15 @@ buildr:
 build: buildr
 
 check:
+	cargo check --all
 	cargo check --all --features "all"
 
 test:
+	cargo test --all
 	cargo test --all --features "all"
 
 clippy:
+	cargo clippy --all -- -Dwarnings
 	cargo clippy --all --features "all" -- -Dwarnings
 
 checkfmt:
@@ -39,7 +42,8 @@ install:
 	cargo install --path $(ROOT_DIR)
 
 doc:
-	cargo doc --all --features "all" --document-private-items
+	cargo doc --all
+	cargo doc --all --features "all"
 
 bench:
 	cargo bench --all --features "all"

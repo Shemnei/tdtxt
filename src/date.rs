@@ -1,8 +1,5 @@
 use std::fmt;
 
-#[cfg(feature = "chrono")]
-use chrono::prelude::*;
-
 use crate::parse::{Parse, Parser};
 
 /// A very basic date type used when feature `chrono` is not active.
@@ -27,7 +24,7 @@ impl SimpleDate {
 	///
 	/// - Month: 1-12
 	/// - Day:   1-31
-	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
+	pub fn from_ymd(year: i16, month: u8, day: u8) -> Self {
 		assert!((1..=12).contains(&month), "month must be between 1-12");
 		assert!((1..=31).contains(&day), "day must be between 1-31");
 
@@ -38,7 +35,7 @@ impl SimpleDate {
 	/// failed.
 	///
 	/// For more information about what could fail see: [`Self::ymd`].
-	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
+	pub fn from_ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		if (1..=12).contains(&month) && (1..=31).contains(&day) {
 			Some(Self { year, month, day })
 		} else {
@@ -64,7 +61,7 @@ impl fmt::Display for SimpleDate {
 pub struct Date {
 	/// Inner backing type.
 	#[cfg(feature = "chrono")]
-	inner: chrono::Date<Local>,
+	inner: chrono::NaiveDate,
 
 	/// Inner backing type.
 	#[cfg(not(feature = "chrono"))]
@@ -83,18 +80,24 @@ impl Date {
 	/// Can panic if the date is invalid.
 	#[cfg_attr(
 		feature = "chrono",
-		doc = "For more information see the relevant backing \
-		       implementation:[`chrono::Local::ymd`]"
+		doc = "For more information see the relevant backing implementation: \
+		       [`chrono::NaiveDate::from_ymd`]"
 	)]
-	pub fn ymd(year: i16, month: u8, day: u8) -> Self {
+	pub fn from_ymd(year: i16, month: u8, day: u8) -> Self {
 		#[cfg(feature = "chrono")]
 		{
-			Self { inner: Local.ymd(year as i32, month as u32, day as u32) }
+			Self {
+				inner: chrono::NaiveDate::from_ymd(
+					year as i32,
+					month as u32,
+					day as u32,
+				),
+			}
 		}
 
 		#[cfg(not(feature = "chrono"))]
 		{
-			Self { inner: SimpleDate::ymd(year, month, day) }
+			Self { inner: SimpleDate::from_ymd(year, month, day) }
 		}
 	}
 
@@ -103,29 +106,31 @@ impl Date {
 	#[cfg_attr(
 		feature = "chrono",
 		doc = "\n# Notes\nFor more information see the relevant backing \
-		       implementation:[`chrono::Local::ymd_opt`]
+		       implementation: [`chrono::NaiveDate::from_ymd_opt`]
 	"
 	)]
-	pub fn ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
+	pub fn from_ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		#[cfg(feature = "chrono")]
 		{
-			let date = Local
-				.ymd_opt(year as i32, month as u32, day as u32)
-				.earliest()?;
+			let date = chrono::NaiveDate::from_ymd_opt(
+				year as i32,
+				month as u32,
+				day as u32,
+			)?;
 
 			Some(Self { inner: date })
 		}
 
 		#[cfg(not(feature = "chrono"))]
 		{
-			Some(Self { inner: SimpleDate::ymd_opt(year, month, day)? })
+			Some(Self { inner: SimpleDate::from_ymd_opt(year, month, day)? })
 		}
 	}
 
 	/// Returns a `Date` which corresponds to the current date.
 	#[cfg(feature = "chrono")]
 	pub fn today() -> Self {
-		Self { inner: Local::today() }
+		Self { inner: chrono::Local::today().naive_utc() }
 	}
 }
 
@@ -140,6 +145,20 @@ impl fmt::Display for Date {
 		{
 			fmt::Display::fmt(&self.inner, f)
 		}
+	}
+}
+
+#[cfg(feature = "chrono")]
+impl From<chrono::naive::NaiveDate> for Date {
+	fn from(value: chrono::naive::NaiveDate) -> Self {
+		Self { inner: value }
+	}
+}
+
+#[cfg(feature = "chrono")]
+impl From<Date> for chrono::NaiveDate {
+	fn from(value: Date) -> Self {
+		value.inner
 	}
 }
 
@@ -167,7 +186,8 @@ impl Parse for Date {
 		let month = (m1 * 10) + m2;
 		let day = (d1 * 10) + d2;
 
-		Self::ymd_opt(year, month, day).ok_or_else(ParseDateError::default)
+		Self::from_ymd_opt(year, month, day)
+			.ok_or_else(ParseDateError::default)
 	}
 }
 
@@ -222,6 +242,7 @@ impl<'de> serde::de::Deserialize<'de> for Date {
 	serde(untagged)
 )]
 pub enum DateCompound {
+	// NOTE: The order in which the variants are order matters (see: serde(untagged)).
 	/// Two dates, a completion date and a creation date.
 	Completed {
 		/// Creation date.
