@@ -4,11 +4,11 @@ version = "0.1.0"
 authors = ["Shemnei"]
 edition = "2018"
 description = "A serializer/deserializer for the todo.txt format"
-documentation = "https://github.com/Shemnei/tdtxt"
+documentation = "https://docs.rs/tdtxt"
 homepage = "https://github.com/Shemnei/tdtxt"
 repository = "https://github.com/Shemnei/tdtxt"
 license = "Unlicense"
-exclude = ["/Makefile", "/.git/", "/.github/"]
+include = ["src/", "LICENSE", "README.md", "CHANGELOG.md"]
 keywords = ["todotxt", "todo", "todo-txt", "parser"]
 
 [[bench]]
