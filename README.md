@@ -65,6 +65,17 @@ assert_eq!(task.description().contexts().collect::<Vec<_>>(), vec!["chapel"]);
 assert_eq!(task.description().custom().collect::<Vec<_>>(), vec![("due", "2016-05-30")]);
 ```
 
+## Examples
+
+For more detailed examples, see the [`examples/`](https://github.com/Shemnei/tdtxt/tree/main/examples) directory.
+
+Run one:
+
+```bash
+# Example `filter_open`
+cargo run --example filter_open -- examples/todos.txt
+```
+
 ## Features
 
 ### Serde (`serde`)
