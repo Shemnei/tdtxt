@@ -5,7 +5,7 @@ use crate::parse::{Parse, Parser};
 
 /// A very basic date type used when feature `chrono` is not active.
 #[cfg(not(feature = "chrono"))]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SimpleDate {
 	/// Year of the date.
 	year: i16,
@@ -75,7 +75,7 @@ impl fmt::Display for SimpleDate {
 /// # Notes
 ///
 /// The inner/backing type is depended on the feature `chrono`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Date {
 	/// Inner backing type.
 	#[cfg(feature = "chrono")]
@@ -293,7 +293,7 @@ impl<'de> serde::de::Deserialize<'de> for Date {
 /// Represents the attached dates a [`Task`](`crate::Task`) can have.
 ///
 /// The dates must be given in the format `yyyy-mm-dd`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(
 	feature = "serde",
 	derive(serde::Serialize, serde::Deserialize),

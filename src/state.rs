@@ -3,7 +3,7 @@ use std::fmt;
 use crate::parse::{Parse, Parser};
 
 /// Represents the state of [`Task`](`crate::Task`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum State {
 	/// The task is still open e.g. not done (no representation).
