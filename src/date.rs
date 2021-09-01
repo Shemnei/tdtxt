@@ -335,6 +335,24 @@ impl DateCompound {
 			completed: completed.into(),
 		}
 	}
+
+	/// Returns the creation date.
+	pub const fn date_created(&self) -> &Date {
+		match self {
+			Self::Created { created } | Self::Completed { created, .. } => {
+				created
+			}
+		}
+	}
+
+	/// Returns the optional completion date.
+	pub const fn date_completed(&self) -> Option<&Date> {
+		if let Self::Completed { completed, .. } = self {
+			Some(completed)
+		} else {
+			None
+		}
+	}
 }
 
 impl fmt::Display for DateCompound {
