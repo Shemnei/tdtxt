@@ -10,9 +10,9 @@ A rust library for de(serializing) files and text in the [todo.txt format](https
 
 ## STATE
 
-**This crate is still early in development, the api is not stable and will change in the future.**
+**This crate is still in development, the api may not stable and could change in the future.**
 
-Having said that, the core of the crate (parsing) is implemented and should function correctly.
+This crate should not be used in production code.
 
 ## Usage
 
