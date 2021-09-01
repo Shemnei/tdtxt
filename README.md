@@ -20,7 +20,7 @@ Add it to the dependencies of your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tdtxt = "0.1"
+tdtxt = "0.2"
 ```
 
 Then use it:
