@@ -96,10 +96,13 @@ impl CustomRange {
 pub struct Description {
 	/// The whole text of the description.
 	raw: String,
+
 	/// Byte indices into [`Self::raw`] representing projects (e.g. `+project`);
 	projects: Vec<ProjectRange>,
+
 	/// Byte indices into [`Self::raw`] representing contexts (e.g. `@context`);
 	contexts: Vec<ContextRange>,
+
 	/// Byte indices into [`Self::raw`] representing custom tags (e.g.
 	/// `key:value`);
 	custom: Vec<CustomRange>,

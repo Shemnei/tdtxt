@@ -12,18 +12,21 @@ use crate::state::State;
 pub struct Task {
 	/// Optional state of the task.
 	pub state: State,
+
 	/// Optional priority of the task.
 	#[cfg_attr(
 		feature = "serde",
 		serde(skip_serializing_if = "Option::is_none", default)
 	)]
 	pub priority: Option<Priority>,
+
 	/// Optional associated special dates for the task.
 	#[cfg_attr(
 		feature = "serde",
 		serde(flatten, skip_serializing_if = "Option::is_none", default)
 	)]
 	pub date_compound: Option<DateCompound>,
+
 	/// Description of the task.
 	pub description: Description,
 }

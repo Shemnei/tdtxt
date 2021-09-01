@@ -9,8 +9,10 @@ use crate::parse::{Parse, Parser};
 pub struct SimpleDate {
 	/// Year of the date.
 	year: i16,
+
 	/// One-indexed month of the date.
 	month: u8,
+
 	/// One-indexed day of the date.
 	day: u8,
 }
@@ -303,9 +305,11 @@ pub enum DateCompound {
 	Completed {
 		/// Creation date.
 		created: Date,
+
 		/// Completion date.
 		completed: Date,
 	},
+
 	/// A single date on which the task was created.
 	Created {
 		/// Creation date.
