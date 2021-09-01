@@ -108,6 +108,8 @@ mod task;
 mod parse;
 mod span;
 
+#[cfg(not(feature = "chrono"))]
+pub use crate::date::SimpleDate;
 pub use crate::date::{Date, DateCompound};
 pub use crate::description::Description;
 pub use crate::priority::Priority;
@@ -123,6 +125,8 @@ pub mod prelude {
 	//! use tdtxt::prelude::*;
 	//! ```
 
+	#[cfg(not(feature = "chrono"))]
+	pub use crate::date::SimpleDate;
 	pub use crate::date::{Date, DateCompound};
 	pub use crate::description::Description;
 	pub use crate::priority::Priority;

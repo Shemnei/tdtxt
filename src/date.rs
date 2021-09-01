@@ -1,4 +1,5 @@
 use std::fmt;
+use std::ops::Deref;
 
 use crate::parse::{Parse, Parser};
 
@@ -34,13 +35,28 @@ impl SimpleDate {
 	/// Creates a new date. Will return `None` if the date creation would have
 	/// failed.
 	///
-	/// For more information about what could fail see: [`Self::ymd`].
+	/// For more information about what could fail see: [`Self::from_ymd`].
 	pub fn from_ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		if (1..=12).contains(&month) && (1..=31).contains(&day) {
 			Some(Self { year, month, day })
 		} else {
 			None
 		}
+	}
+
+	/// Returns the year of the date.
+	pub const fn year(&self) -> i16 {
+		self.year
+	}
+
+	/// Returns the one-indexed month of the date.
+	pub const fn month(&self) -> u8 {
+		self.month
+	}
+
+	/// Returns the one-indexed day of the date.
+	pub const fn day(&self) -> u8 {
+		self.day
 	}
 }
 
@@ -78,11 +94,9 @@ impl Date {
 	/// # Panics
 	///
 	/// Can panic if the date is invalid.
-	#[cfg_attr(
-		feature = "chrono",
-		doc = "For more information see the relevant backing implementation: \
-		       [`chrono::NaiveDate::from_ymd`]"
-	)]
+	/// For more information see the relevant backing implementation:
+	#[cfg_attr(feature = "chrono", doc = " [`chrono::NaiveDate::from_ymd`]")]
+	#[cfg_attr(not(feature = "chrono"), doc = " [`SimpleDate::from_ymd`]")]
 	pub fn from_ymd(year: i16, month: u8, day: u8) -> Self {
 		#[cfg(feature = "chrono")]
 		{
@@ -103,12 +117,15 @@ impl Date {
 
 	/// Creates a new date. Returns `None` when the date creation would have
 	/// failed.
+	///
+	/// # Notes
+	///
+	/// For more information see the relevant backing implementation:
 	#[cfg_attr(
 		feature = "chrono",
-		doc = "\n# Notes\nFor more information see the relevant backing \
-		       implementation: [`chrono::NaiveDate::from_ymd_opt`]
-	"
+		doc = " [`chrono::NaiveDate::from_ymd_opt`]"
 	)]
+	#[cfg_attr(not(feature = "chrono"), doc = " [`SimpleDate::from_ymd_opt`]")]
 	pub fn from_ymd_opt(year: i16, month: u8, day: u8) -> Option<Self> {
 		#[cfg(feature = "chrono")]
 		{
@@ -159,6 +176,45 @@ impl From<chrono::naive::NaiveDate> for Date {
 impl From<Date> for chrono::NaiveDate {
 	fn from(value: Date) -> Self {
 		value.inner
+	}
+}
+
+#[cfg(not(feature = "chrono"))]
+impl From<SimpleDate> for Date {
+	fn from(value: SimpleDate) -> Self {
+		Self { inner: value }
+	}
+}
+
+#[cfg(not(feature = "chrono"))]
+impl From<Date> for SimpleDate {
+	fn from(value: Date) -> Self {
+		value.inner
+	}
+}
+
+#[cfg(not(feature = "chrono"))]
+impl AsRef<SimpleDate> for Date {
+	fn as_ref(&self) -> &SimpleDate {
+		&self.inner
+	}
+}
+
+#[cfg(feature = "chrono")]
+impl AsRef<chrono::NaiveDate> for Date {
+	fn as_ref(&self) -> &chrono::NaiveDate {
+		&self.inner
+	}
+}
+
+impl Deref for Date {
+	#[cfg(not(feature = "chrono"))]
+	type Target = SimpleDate;
+	#[cfg(feature = "chrono")]
+	type Target = chrono::NaiveDate;
+
+	fn deref(&self) -> &Self::Target {
+		&self.inner
 	}
 }
 
