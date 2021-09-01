@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The crate now exports all useful definitions in the root
 - Added enum variant `State::Open`
 - Implemented `std::std::FromStr` for all task components
+- Added rustdoc documentation to the public api
+- Added feature `chrono` for optional support for `chrono::Local` dates
+- Added feature `serde` for optional support for de(serializing) todo.txt components
 
 ### Changed
 
