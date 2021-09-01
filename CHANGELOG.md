@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added rustdoc documentation to the public api
 - Added feature `chrono` for optional support for `chrono::NaiveDate` dates
 - Added feature `serde` for optional support for de(serializing) todo.txt components
+- Added example `examples/filter_open.rs`
+- Added `PartialOrd` and `Ord` for `SimpleDate`, `Date`, `DateCompound` and `State`
 
 ### Changed
 
