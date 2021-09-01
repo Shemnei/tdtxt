@@ -797,6 +797,46 @@ x Download Todo.txt mobile app @Phone";
 	}
 
 	#[test]
+	fn parse_unicode() {
+		let input = "x 2016-04-30 clean the room \u{1F614} +studying \
+		             @\u{1F9D1}\u{200D}\u{1F3EB} emoji:\u{1F600}";
+
+		let task_is = Task::from_str(input);
+
+		let task_should = Task::build()
+			.state(State::Done)
+			.date_compound(DateCompound::created(Date::ymd(2016, 4, 30)))
+			.build(
+				"clean the room \u{1F614} +studying \
+				 @\u{1F9D1}\u{200D}\u{1F3EB} emoji:\u{1F600}",
+			);
+
+		assert_eq!(task_is, Ok(task_should));
+		let task_is = task_is.unwrap();
+		assert_eq!(
+			task_is.to_string().as_bytes(),
+			"x 2016-04-30 clean the room \u{1F614} +studying \
+			 @\u{1F9D1}\u{200D}\u{1F3EB} emoji:\u{1F600}"
+				.as_bytes()
+		);
+		let projects_should: Vec<&str> = vec!["studying"];
+		assert_eq!(
+			task_is.description.projects().collect::<Vec<_>>(),
+			projects_should
+		);
+		let contexts_should: Vec<&str> = vec!["\u{1F9D1}\u{200D}\u{1F3EB}"];
+		assert_eq!(
+			task_is.description.contexts().collect::<Vec<_>>(),
+			contexts_should
+		);
+		let custom_should: Vec<(&str, &str)> = vec![("emoji", "\u{1F600}")];
+		assert_eq!(
+			task_is.description.custom().collect::<Vec<_>>(),
+			custom_should
+		);
+	}
+
+	#[test]
 	fn priority_ord() {
 		assert!(Priority::A > Priority::B);
 		assert!(Priority::A == Priority::A);
