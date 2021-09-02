@@ -80,12 +80,6 @@ impl fmt::Display for Task {
 	}
 }
 
-impl From<&str> for Description {
-	fn from(value: &str) -> Self {
-		Self::new(value)
-	}
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ParseTaskError;
 

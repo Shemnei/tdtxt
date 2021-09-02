@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Fuzzing case for parsing of a `Task`
+- Generic `From<S: Into<String>>` implemented for `Description`
+
+### Changed
+
+- `Description::new` now accepts `Into<String>` instead of `ToString`
 
 ## [0.2.0] - 2021-09-01
 

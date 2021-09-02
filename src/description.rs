@@ -115,9 +115,9 @@ impl Description {
 	/// located.
 	pub fn new<S>(s: S) -> Self
 	where
-		S: ToString,
+		S: Into<String>,
 	{
-		let raw: String = s.to_string();
+		let raw: String = s.into();
 		let (projects, contexts, custom) = Self::index(&raw);
 
 		Self { raw, projects, contexts, custom }
@@ -267,6 +267,15 @@ impl Deref for Description {
 
 	fn deref(&self) -> &Self::Target {
 		&self.raw
+	}
+}
+
+impl<S> From<S> for Description
+where
+	S: Into<String>,
+{
+	fn from(value: S) -> Self {
+		Self::new(value)
 	}
 }
 
