@@ -27,6 +27,15 @@ macro_rules! priorities {
 			)+
 		}
 
+		impl Priority {
+			/// Returns the representing character for the priority.
+			pub const fn as_char(&self) -> char {
+				match self {
+					$( Self::$name => $char ),+
+				}
+			}
+		}
+
 		impl ::std::fmt::Display for Priority {
 			fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
 				match self {
