@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fuzzing case for parsing of a `Task`
 - Generic `From<S: Into<String>>` implemented for `Description`
+- Added `State::is_done` and `State::is_open`
 
 ### Changed
 

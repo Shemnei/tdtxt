@@ -13,6 +13,18 @@ pub enum State {
 	Done,
 }
 
+impl State {
+	/// Returns `true` if the state is [`Self::Open`].
+	pub fn is_open(&self) -> bool {
+		self == &Self::Open
+	}
+
+	/// Returns `true` if the state is [`Self::Done`].
+	pub fn is_done(&self) -> bool {
+		self == &Self::Done
+	}
+}
+
 impl Default for State {
 	fn default() -> Self {
 		Self::Open
