@@ -60,14 +60,15 @@ impl ContextRange {
 pub struct CustomRange {
 	full: ByteSpan,
 	key: ByteSpan,
+	separator: ByteSpan,
 	value: ByteSpan,
 }
 
 impl CustomRange {
-	pub fn new(key: ByteSpan, value: ByteSpan) -> Self {
+	pub fn new(key: ByteSpan, separator: ByteSpan, value: ByteSpan) -> Self {
 		let full = key.union(&value);
 
-		Self { full, key, value }
+		Self { full, key, separator, value }
 	}
 
 	pub const fn full(&self) -> &ByteSpan {
@@ -76,6 +77,10 @@ impl CustomRange {
 
 	pub const fn key(&self) -> &ByteSpan {
 		&self.key
+	}
+
+	pub const fn separator(&self) -> &ByteSpan {
+		&self.separator
 	}
 
 	pub const fn value(&self) -> &ByteSpan {
@@ -141,6 +146,36 @@ impl Description {
 	/// Returns an iterator of all custom tags found within the description.
 	pub fn custom(&self) -> CustomIter<'_> {
 		CustomIter::new(self)
+	}
+
+	/// Returns an iterator of all the [`Component`]'s of the description.
+	///
+	/// # Examples
+	///
+	/// ```rust
+	/// use tdtxt::{Description, Component};
+	///
+	/// let input = "Call Mom +Family +PeaceLoveAndHappiness @iphone @phone number:+1(111)111-7777";
+	/// let description = Description::new(input);
+	/// let mut components = description.components();
+	///
+	/// assert_eq!(components.next(), Some(Component::Text("Call Mom ")));
+	/// assert_eq!(components.next(), Some(Component::Project("+Family")));
+	/// assert_eq!(components.next(), Some(Component::Text(" ")));
+	/// assert_eq!(components.next(), Some(Component::Project("+PeaceLoveAndHappiness")));
+	/// assert_eq!(components.next(), Some(Component::Text(" ")));
+	/// assert_eq!(components.next(), Some(Component::Context("@iphone")));
+	/// assert_eq!(components.next(), Some(Component::Text(" ")));
+	/// assert_eq!(components.next(), Some(Component::Context("@phone")));
+	/// assert_eq!(components.next(), Some(Component::Text(" ")));
+	/// assert_eq!(components.next(), Some(Component::Custom {
+	///     key: "number",
+	///     separator: ":",
+	///     value: "+1(111)111-7777"
+	/// }));
+	/// ```
+	pub fn components(&self) -> Components<'_> {
+		Components::new(self)
 	}
 
 	// project: \+[^ ]+
@@ -235,6 +270,10 @@ impl Description {
 
 			assert_eq!(cursor.consume(), Some(b':'));
 
+			let separator_span =
+				ByteSpan::new(cursor.byte_pos(), cursor.byte_pos())
+					.offset_low(-1);
+
 			if key_span.len() > 0
 				&& matches!(cursor.first(), Some(b) if is_key_value_byte(b))
 			{
@@ -246,7 +285,11 @@ impl Description {
 				if !(value_span.len() == 0
 					|| matches!(cursor.first(), Some(b) if !b.is_ascii_whitespace()))
 				{
-					return Some(CustomRange::new(key_span, value_span));
+					return Some(CustomRange::new(
+						key_span,
+						separator_span,
+						value_span,
+					));
 				}
 			}
 		}
@@ -335,6 +378,161 @@ macro_rules! simple_iter {
 simple_iter!(ProjectIter => ProjectRange, projects, &'a str);
 simple_iter!(ContextIter => ContextRange, contexts, &'a str);
 simple_iter!(CustomIter => CustomRange, custom, (&'a str, &'a str));
+
+/// A single component of a [`Description`].
+///
+/// Variants of this enum are created by [`Components`], which is an iterator
+/// over all components of a description. This iterator is returned by calling
+/// [`Description::components`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Component<'a> {
+	/// A text component, e.g. `Hello World`.
+	Text(&'a str),
+
+	/// A full project component, e.g. `+project`.
+	Project(&'a str),
+
+	/// A full context component, e.g. `@context`.
+	Context(&'a str),
+
+	/// A full custom tag component, e.g. `key:value`.
+	Custom {
+		/// The key of the tag, e.g. `key`.
+		key: &'a str,
+
+		/// The separator of the tag (this should always be `:`).
+		separator: &'a str,
+
+		/// The value of the tag, e.g. `value`.
+		value: &'a str,
+	},
+}
+
+/// An iterator of all the [`Component`]'s of a [`Description`].
+///
+/// This iterator is returned by calling [`Description::components`].
+///
+/// # Examples
+///
+/// ```rust
+/// use tdtxt::{Description, Component};
+///
+/// let input = "measure space for +chapelShelving @chapel due:2016-05-30";
+/// let description = Description::new(input);
+/// let components = description.components().collect::<Vec<_>>();
+///
+/// assert_eq!(
+///     components,
+///     &[
+///         Component::Text("measure space for "),
+///         Component::Project("+chapelShelving"),
+///         Component::Text(" "),
+///         Component::Context("@chapel"),
+///         Component::Text(" "),
+///         Component::Custom {
+///             key: "due",
+///             separator: ":",
+///             value: "2016-05-30"
+///         },
+///     ]
+/// );
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Components<'a> {
+	raw: &'a str,
+	project_ranges: &'a [ProjectRange],
+	context_ranges: &'a [ContextRange],
+	custom_ranges: &'a [CustomRange],
+	byte_idx: usize,
+}
+
+impl<'a> Components<'a> {
+	fn new(description: &'a Description) -> Self {
+		Self {
+			raw: &description.raw,
+			project_ranges: &description.projects,
+			context_ranges: &description.contexts,
+			custom_ranges: &description.custom,
+			byte_idx: 0,
+		}
+	}
+}
+
+impl<'a> Iterator for Components<'a> {
+	type Item = Component<'a>;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if self.byte_idx >= self.raw.len() {
+			None
+		} else {
+			let mut range_end = self.raw.len();
+
+			if let Some(project_range) = self.project_ranges.first() {
+				let low_idx = project_range.full().low().as_usize();
+
+				if low_idx == self.byte_idx {
+					// Update internal state
+					// "Pop" range
+					self.project_ranges = &self.project_ranges[1..];
+					self.byte_idx = project_range.full().high().as_usize();
+
+					return Some(Component::Project(Index::index(
+						self.raw,
+						project_range.full,
+					)));
+				} else {
+					range_end = range_end.min(low_idx);
+				}
+			}
+
+			if let Some(context_range) = self.context_ranges.first() {
+				let low_idx = context_range.full().low().as_usize();
+
+				if low_idx == self.byte_idx {
+					// Update internal state
+					// "Pop" range
+					self.context_ranges = &self.context_ranges[1..];
+					self.byte_idx = context_range.full().high().as_usize();
+
+					return Some(Component::Context(Index::index(
+						self.raw,
+						context_range.full,
+					)));
+				} else {
+					range_end = range_end.min(low_idx);
+				}
+			}
+
+			if let Some(custom_range) = self.custom_ranges.first() {
+				let low_idx = custom_range.full().low().as_usize();
+
+				if low_idx == self.byte_idx {
+					// Update internal state
+					// "Pop" range
+					self.custom_ranges = &self.custom_ranges[1..];
+					self.byte_idx = custom_range.full().high().as_usize();
+
+					return Some(Component::Custom {
+						key: Index::index(self.raw, custom_range.key),
+						separator: Index::index(
+							self.raw,
+							custom_range.separator,
+						),
+						value: Index::index(self.raw, custom_range.value),
+					});
+				} else {
+					range_end = range_end.min(low_idx);
+				}
+			}
+
+			std::mem::swap(&mut self.byte_idx, &mut range_end);
+
+			return Some(Component::Text(
+				self.raw.index(range_end..self.byte_idx),
+			));
+		}
+	}
+}
 
 #[cfg(feature = "serde")]
 impl serde::Serialize for Description {

@@ -111,7 +111,7 @@ mod span;
 #[cfg(not(feature = "chrono"))]
 pub use crate::date::SimpleDate;
 pub use crate::date::{Date, DateCompound};
-pub use crate::description::Description;
+pub use crate::description::{Component, Description};
 pub use crate::priority::Priority;
 pub use crate::state::State;
 pub use crate::task::{Task, TaskBuilder};
@@ -128,7 +128,7 @@ pub mod prelude {
 	#[cfg(not(feature = "chrono"))]
 	pub use crate::date::SimpleDate;
 	pub use crate::date::{Date, DateCompound};
-	pub use crate::description::Description;
+	pub use crate::description::{Component, Description};
 	pub use crate::priority::Priority;
 	pub use crate::state::State;
 	pub use crate::task::{Task, TaskBuilder};
@@ -146,6 +146,7 @@ mod tests {
 	use crate::priority::Priority;
 	use crate::state::State;
 	use crate::task::{ParseTaskError, Task};
+	use crate::Component;
 
 	#[cfg(feature = "serde")]
 	#[test]
@@ -838,6 +839,29 @@ x Download Todo.txt mobile app @Phone";
 		assert_eq!(
 			task_is.description.custom().collect::<Vec<_>>(),
 			custom_should
+		);
+	}
+
+	#[test]
+	fn description_components() {
+		let input = "measure space for +chapelShelving @chapel due:2016-05-30";
+		let description = Description::new(input);
+		let components = description.components().collect::<Vec<_>>();
+
+		assert_eq!(
+			components,
+			&[
+				Component::Text("measure space for "),
+				Component::Project("+chapelShelving"),
+				Component::Text(" "),
+				Component::Context("@chapel"),
+				Component::Text(" "),
+				Component::Custom {
+					key: "due",
+					separator: ":",
+					value: "2016-05-30"
+				},
+			]
 		);
 	}
 

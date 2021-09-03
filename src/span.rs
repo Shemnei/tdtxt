@@ -153,6 +153,14 @@ impl ByteSpan {
 		self.high.as_usize() - self.low.as_usize()
 	}
 
+	pub const fn low(&self) -> &BytePos {
+		&self.low
+	}
+
+	pub const fn high(&self) -> &BytePos {
+		&self.high
+	}
+
 	pub fn to_range_usize(self) -> Range<usize> {
 		self.low.into()..self.high.into()
 	}

@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fuzzing case for parsing of a `Task`
 - Generic `From<S: Into<String>>` implemented for `Description`
-- Added `State::is_done` and `State::is_open`
-- Added `Priority::as_char`
+- Added functions `State::is_done` and `State::is_open`
+- Added function `Priority::as_char`
+- Added struct `Component` and `Components` as iterator return value for the new function `Description::components`
 
 ### Changed
 
