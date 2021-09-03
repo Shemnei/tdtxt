@@ -34,7 +34,7 @@ pub struct Task {
 impl Task {
 	/// Creates a new builder for a task.
 	pub fn build() -> TaskBuilder {
-		Default::default()
+		TaskBuilder::default()
 	}
 
 	/// Returns the state of the task.

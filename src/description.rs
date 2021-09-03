@@ -196,8 +196,7 @@ impl Description {
 			// TODO: check and warn if not at word boundry
 			debug_assert!(cursor
 				.first()
-				.map(|b| b.is_ascii_whitespace())
-				.unwrap_or(true));
+				.map_or(true, |b| b.is_ascii_whitespace()));
 		}
 
 		(projects, contexts, custom)
@@ -234,7 +233,7 @@ impl Description {
 		if let Some(b':') = cursor.first() {
 			let key_span = ByteSpan::new(word_start, cursor.byte_pos());
 
-			debug_assert_eq!(cursor.consume(), Some(b':'));
+			assert_eq!(cursor.consume(), Some(b':'));
 
 			if key_span.len() > 0
 				&& matches!(cursor.first(), Some(b) if is_key_value_byte(b))

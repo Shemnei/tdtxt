@@ -1,5 +1,5 @@
 .PHONY: default buildd buildr build check test clippy checkfmt lint run clean
-.PHONY: install doc cic todos
+.PHONY: install doc cic bench bencho cwtf todos
 
 # Is set to the directory which contains the Makefile regardless from where
 # the make command is called.
@@ -51,6 +51,18 @@ bench:
 bencho:
 	cargo bench --all --features "all"
 	xdg-open target/criterion/report/index.html
+
+cwtf:
+	cargo +nightly clippy --message-format=short -- \
+		-D clippy::all \
+		-D clippy::correctness \
+		-D clippy::suspicious \
+		-D clippy::style \
+		-D clippy::complexity \
+		-D clippy::perf \
+		-D clippy::pedantic \
+		-D clippy::nursery \
+		-D clippy::cargo
 
 # utility
 # can i commit

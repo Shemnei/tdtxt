@@ -403,11 +403,7 @@ impl Parse for DateCompound {
 		if p_copy.expect_whitespace().is_some() {
 			if let Some(date2) = Date::parse_opt(&mut p_copy) {
 				// Check if eof or white space; if not it is a single date
-				if p_copy
-					.peek()
-					.map(|c| c.is_ascii_whitespace())
-					.unwrap_or(true)
-				{
+				if p_copy.peek().map_or(true, |c| c.is_ascii_whitespace()) {
 					*parser = p_copy;
 
 					return Ok(Self::Completed {

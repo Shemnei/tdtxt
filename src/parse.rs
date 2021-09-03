@@ -252,11 +252,11 @@ impl<'a> Cursor<'a> {
 	}
 
 	pub fn consume_whitespaces(&mut self) {
-		self.consume_while(|b| b.is_ascii_whitespace())
+		self.consume_while(|b| b.is_ascii_whitespace());
 	}
 
 	pub fn consume_non_whitespaces(&mut self) {
-		self.consume_while(|b| !b.is_ascii_whitespace())
+		self.consume_while(|b| !b.is_ascii_whitespace());
 	}
 
 	pub const fn first(&self) -> Option<u8> {
