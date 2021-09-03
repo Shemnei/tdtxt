@@ -111,7 +111,7 @@ mod span;
 #[cfg(not(feature = "chrono"))]
 pub use crate::date::SimpleDate;
 pub use crate::date::{Date, DateCompound};
-pub use crate::description::{Component, Description};
+pub use crate::description::{Component, Components, Description};
 pub use crate::priority::Priority;
 pub use crate::state::State;
 pub use crate::task::{Task, TaskBuilder};
@@ -128,7 +128,7 @@ pub mod prelude {
 	#[cfg(not(feature = "chrono"))]
 	pub use crate::date::SimpleDate;
 	pub use crate::date::{Date, DateCompound};
-	pub use crate::description::{Component, Description};
+	pub use crate::description::{Component, Components, Description};
 	pub use crate::priority::Priority;
 	pub use crate::state::State;
 	pub use crate::task::{Task, TaskBuilder};
