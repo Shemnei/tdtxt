@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added functions `State::is_done` and `State::is_open`
 - Added function `Priority::as_char`
 - Added struct `Component` and `Components` as iterator return value for the new function `Description::components`
+- Added parse errors to the public API
 
 ### Changed
 

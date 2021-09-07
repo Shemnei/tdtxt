@@ -80,6 +80,8 @@ impl fmt::Display for Task {
 	}
 }
 
+/// This struct represents errors which may occur during the parsing of a
+/// [`Task`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ParseTaskError;
 
