@@ -1,6 +1,6 @@
 [package]
 name = "tdtxt"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Shemnei"]
 edition = "2018"
 description = "A serializer/deserializer for the todo.txt format"
